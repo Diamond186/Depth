@@ -29,6 +29,9 @@ type
     iClose: TImage;
     iAdd: TImage;
     iSettings: TImage;
+    pMainHeader: TPanel;
+    pRightHeader: TPanel;
+    pLeftHeader: TPanel;
     procedure iCloseClick(Sender: TObject);
     procedure iAddClick(Sender: TObject);
     procedure vstBTCGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
