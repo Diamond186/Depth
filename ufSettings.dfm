@@ -5,7 +5,7 @@ object frmSettings: TfrmSettings
   BorderStyle = bsSingle
   Caption = 'Settings'
   ClientHeight = 323
-  ClientWidth = 457
+  ClientWidth = 589
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,41 +15,19 @@ object frmSettings: TfrmSettings
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 21
-  object cbExchangeList: TCheckListBox
-    Left = 0
-    Top = 0
-    Width = 289
-    Height = 282
-    Align = alLeft
-    BevelInner = bvNone
-    BevelOuter = bvNone
-    BorderStyle = bsNone
-    ItemHeight = 21
-    Items.Strings = (
-      'BiBox'
-      'Binance'
-      'Bitfinex'
-      'Bitstamp'
-      'Bittrex'
-      'HitBTC'
-      'Huobi'
-      'Kraken'
-      'Okex')
-    TabOrder = 0
-  end
   object pFooter: TPanel
     Left = 0
     Top = 282
-    Width = 457
+    Width = 589
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
-      457
+      589
       41)
     object bCancel: TButton
-      Left = 375
+      Left = 507
       Top = 7
       Width = 75
       Height = 30
@@ -60,7 +38,7 @@ object frmSettings: TfrmSettings
       TabOrder = 0
     end
     object bSave: TButton
-      Left = 294
+      Left = 426
       Top = 7
       Width = 75
       Height = 30
@@ -71,18 +49,14 @@ object frmSettings: TfrmSettings
     end
   end
   object pMain: TPanel
-    Left = 289
+    Left = 417
     Top = 0
-    Width = 168
+    Width = 172
     Height = 282
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
-    TabOrder = 2
-    ExplicitLeft = 176
-    ExplicitTop = 28
-    ExplicitWidth = 265
-    ExplicitHeight = 213
+    TabOrder = 1
     object cbPairs: TComboBox
       Left = 15
       Top = 47
@@ -119,19 +93,49 @@ object frmSettings: TfrmSettings
       TextHint = 'Search'
     end
   end
-  object VirtualStringTree1: TVirtualStringTree
-    Left = 83
-    Top = 127
-    Width = 200
-    Height = 100
+  object vstExchanges: TVirtualStringTree
+    Left = 0
+    Top = 0
+    Width = 417
+    Height = 282
+    Align = alLeft
     Header.AutoSizeIndex = 0
     Header.Font.Charset = DEFAULT_CHARSET
     Header.Font.Color = clWindowText
     Header.Font.Height = -11
     Header.Font.Name = 'Tahoma'
     Header.Font.Style = []
-    Header.MainColumn = -1
-    TabOrder = 3
-    Columns = <>
+    Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoShowSortGlyphs, hoVisible]
+    RootNodeCount = 9
+    TabOrder = 2
+    TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
+    TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages]
+    OnChecked = vstExchangesChecked
+    OnGetText = vstExchangesGetText
+    OnInitNode = vstExchangesInitNode
+    Columns = <
+      item
+        CaptionAlignment = taCenter
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment]
+        Position = 0
+        Width = 133
+        WideText = 'Exchange'
+      end
+      item
+        CaptionAlignment = taCenter
+        CheckType = ctNone
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment]
+        Position = 1
+        Width = 130
+        WideText = 'Last Price'
+      end
+      item
+        CaptionAlignment = taCenter
+        CheckType = ctNone
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment]
+        Position = 2
+        Width = 150
+        WideText = '24h Volume'
+      end>
   end
 end

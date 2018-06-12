@@ -17,6 +17,7 @@ type
                                                            'Huobi', 'Kraken', 'Okex', 'Poloniex');
     public
       function ToString: string; overload; inline;
+      class function Count: Integer; inline; static;
   end;
 
   TPairDepth = class
@@ -82,6 +83,7 @@ type
 implementation
 
 uses
+  uSettigns,
   System.Math;
 
 { TPairDepth }
@@ -133,9 +135,13 @@ end;
 
 { TExchange }
 
+class function TExchangeHelper.Count: Integer;
+begin
+  Result := Length(cArrExchangesText);
+end;
+
 function TExchangeHelper.ToString: string;
 begin
   Result := cArrExchangesText[Self];
 end;
-
 end.
