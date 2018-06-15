@@ -53,7 +53,7 @@ type
       procedure DeleteWhenLess(aList: TList<TPairDepth>; const aMinAmount: Double);
       function  GetTotalAmount(const aList: TList<TPairDepth>): Double;
       procedure DoTimer(Sender: TObject);
-    procedure SetActive(const Value: Boolean);
+      procedure SetActive(const Value: Boolean);
     public
       constructor Create(const aSettins: ISettigns);
       destructor  Destroy; override;
@@ -65,11 +65,15 @@ type
       property OnUpdateStatistics24h: TOnUpdateStatistics24h read FOnUpdateStatistics24h write FOnUpdateStatistics24h;
 
       property Active: Boolean read FActive write SetActive;
+      property Settings: ISettigns read FSettins;
+
+      property Binance: TDepthBinance read FBinance;
   end;
 
 implementation
 
 uses
+  uLogging,
   System.Math;
 
 { TExchangeManager }
@@ -308,8 +312,6 @@ begin
 end;
 
 destructor TExchangeManager.Destroy;
-var
-  i: Integer;
 begin
   FTimer.Enabled := False;
   FreeAndNil(FTimer);

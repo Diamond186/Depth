@@ -113,7 +113,7 @@ end;
 
 procedure TframePair.iSettingsClick(Sender: TObject);
 begin
-  if TfrmSettings.ShowSettings(FSettins) then
+  if TfrmSettings.ShowSettings(FExchangeManager) then
   begin
     FExchangeManager.UpdateActiveExchange;
   end;

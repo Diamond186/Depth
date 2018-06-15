@@ -25,7 +25,7 @@ type
 implementation
 
 uses
-  System.JSON, uExchangeClass;
+  System.JSON, uExchangeClass, uLogging;
 
 { TDepthBittrex }
 
@@ -78,9 +78,6 @@ begin
     end;
 
     Self.ApplyUpdate := True;
-
-    if Assigned(FDepthManage) then
-      FDepthManage;
   end;
 end;
 
@@ -135,10 +132,21 @@ begin
   try
     LRes := FIdHTTP.Get(depthBittrex);
   except
-    LRes := EmptyStr;
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      ApplyUpdate := True;
+
+      TTestRun.AddMarker('Error: ' + E.Message);
+    end;
   end;
 
   ParseResponse(LRes);
+
+  if Assigned(FDepthManage)
+    and (ApplyUpdate or LRes.IsEmpty)
+  then
+      FDepthManage;
 end;
 
 end.

@@ -25,7 +25,7 @@ type
 implementation
 
 uses
-  System.JSON;
+  System.JSON, uLogging;
 
 { TDepthBinance }
 
@@ -132,9 +132,6 @@ begin
     end;
 
     Self.ApplyUpdate := True;
-
-    if Assigned(FDepthManage) then
-      FDepthManage;
   end;
 end;
 
@@ -153,10 +150,21 @@ begin
   try
     LRes := FIdHTTP.Get(cDepthURL);
   except
-    LRes := EmptyStr;
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      ApplyUpdate := True;
+
+      TTestRun.AddMarker('Error: ' + E.Message);
+    end;
   end;
 
   ParseResponseDepth(LRes);
+
+  if Assigned(FDepthManage)
+    and (ApplyUpdate or LRes.IsEmpty)
+  then
+      FDepthManage;
 end;
 
 end.

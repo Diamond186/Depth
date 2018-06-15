@@ -3,7 +3,7 @@ object frmMain: TfrmMain
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Depth'
-  ClientHeight = 487
+  ClientHeight = 447
   ClientWidth = 313
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET

@@ -3,7 +3,7 @@ unit uCustomDepth;
 interface
 
 uses
-  System.SysUtils, IdHTTP, System.Classes,
+  System.SysUtils, IdHTTP, System.Classes, IdComponent,
   uExchangeClass;
 
 type
@@ -89,7 +89,6 @@ begin
   FIdHTTP.IOHandler := LIOHandler;
   FIdHTTP.Request.UserAgent := 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; MAAU)';
   FIdHTTP.ConnectTimeout := 1000;
-//  FIdHTTP.ReadTimeout := 2000;
 end;
 
 destructor TCustomDepth.Destroy;

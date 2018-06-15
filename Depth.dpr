@@ -23,6 +23,7 @@ uses
   uExchangeManager in 'uExchangeManager.pas',
   ufSettings in 'ufSettings.pas' {frmSettings},
   uSettigns in 'uSettigns.pas',
+  uLogging in 'uLogging.pas',
   uPairFrame in 'uPairFrame.pas' {framePair: TFrame};
 
 {$R *.res}

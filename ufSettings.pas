@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, Vcl.ExtCtrls, uSettigns,
-  VirtualTrees;
+  VirtualTrees, uExchangeManager;
 
 type
   TfrmSettings = class(TForm)
@@ -24,9 +24,9 @@ type
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstExchangesChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
-    FSettigns: ISettigns;
+    FExchangeManager: TExchangeManager;
   public
-    class function ShowSettings(const aSettigns: ISettigns): Boolean;
+    class function ShowSettings(const aExchandeManager: TExchangeManager): Boolean;
   end;
 
 implementation
@@ -38,30 +38,30 @@ uses
 
 { TfrmSettings }
 
-class function TfrmSettings.ShowSettings(const aSettigns: ISettigns): Boolean;
+class function TfrmSettings.ShowSettings(const aExchandeManager: TExchangeManager): Boolean;
 var
   LNode: PVirtualNode;
   LUseExchange: Boolean;
 begin
   Result := False;
 
-  if Assigned(aSettigns) then
+  if Assigned(aExchandeManager) then
   with TfrmSettings.Create(nil) do
   try
-    FSettigns := aSettigns;
+    FExchangeManager := aExchandeManager;
     vstExchanges.RootNodeCount := TExchange.Count;
     vstExchanges.ReinitNode(nil, True);
 
-    eMinAmount.Text := FloatToStr(aSettigns.MinPrice);
-    eBoldAmount.Text := FloatToStr(aSettigns.BoldPrice);
-    cbPairs.Text := aSettigns.Pair;
+    eMinAmount.Text := FloatToStr(aExchandeManager.Settings.MinPrice);
+    eBoldAmount.Text := FloatToStr(aExchandeManager.Settings.BoldPrice);
+    cbPairs.Text := aExchandeManager.Settings.Pair;
 
     Result := ShowModal = mrOk;
 
     if Result then
     begin
-      aSettigns.BoldPrice := StrToFloat(eBoldAmount.Text);
-      aSettigns.MinPrice := StrToFloat(eMinAmount.Text);
+      aExchandeManager.Settings.BoldPrice := StrToFloat(eBoldAmount.Text);
+      aExchandeManager.Settings.MinPrice := StrToFloat(eMinAmount.Text);
 
       LNode := vstExchanges.GetFirst;
       while Assigned(LNode) do
@@ -69,22 +69,22 @@ begin
         LUseExchange := LNode^.CheckState = csCheckedNormal;
 
         case TExchange(LNode^.Index) of
-          BiBox: FSettigns.UseBiBox := LUseExchange;
-          Binance: FSettigns.UseBinance := LUseExchange;
-          Bitfinex: FSettigns.UseBitfinex := LUseExchange;
-          Bitstamp: FSettigns.UseBitstamp := LUseExchange;
-          Bittrex: FSettigns.UseBittrex := LUseExchange;
-          HitBTC: FSettigns.UseHitBTC := LUseExchange;
-          Huobi: FSettigns.UseHuobi := LUseExchange;
-          Kraken: FSettigns.UseKraken := LUseExchange;
-          Okex: FSettigns.UseOkex := LUseExchange;
+          BiBox: aExchandeManager.Settings.UseBiBox := LUseExchange;
+          Binance: aExchandeManager.Settings.UseBinance := LUseExchange;
+          Bitfinex: aExchandeManager.Settings.UseBitfinex := LUseExchange;
+          Bitstamp: aExchandeManager.Settings.UseBitstamp := LUseExchange;
+          Bittrex: aExchandeManager.Settings.UseBittrex := LUseExchange;
+          HitBTC: aExchandeManager.Settings.UseHitBTC := LUseExchange;
+          Huobi: aExchandeManager.Settings.UseHuobi := LUseExchange;
+          Kraken: aExchandeManager.Settings.UseKraken := LUseExchange;
+          Okex: aExchandeManager.Settings.UseOkex := LUseExchange;
 //          Poloniex: LUseExchange := False;
         end;
 
         LNode := LNode.NextSibling;
       end;
 
-      aSettigns.Save;
+      aExchandeManager.Settings.Save;
     end;
   finally
     Free;
@@ -106,6 +106,34 @@ procedure TfrmSettings.vstExchangesGetText(Sender: TBaseVirtualTree;
 begin
   case Column of
     0: CellText := TExchange(Node.Index).ToString;
+
+    1:
+      case TExchange(Node^.Index) of
+        BiBox: CellText := EmptyStr;
+        Binance: CellText := Format('%n', [FExchangeManager.Binance.Statis24h.LastPrice]);
+        Bitfinex: CellText := EmptyStr;
+        Bitstamp: CellText := EmptyStr;
+        Bittrex: CellText := EmptyStr;
+        HitBTC: CellText := EmptyStr;
+        Huobi: CellText := EmptyStr;
+        Kraken: CellText := EmptyStr;
+        Okex: CellText := EmptyStr;
+        Poloniex: CellText := EmptyStr;
+      end;
+
+    2:
+      case TExchange(Node^.Index) of
+        BiBox: CellText := EmptyStr;
+        Binance: CellText := Format('%n', [FExchangeManager.Binance.Statis24h.Volume]);
+        Bitfinex: CellText := EmptyStr;
+        Bitstamp: CellText := EmptyStr;
+        Bittrex: CellText := EmptyStr;
+        HitBTC: CellText := EmptyStr;
+        Huobi: CellText := EmptyStr;
+        Kraken: CellText := EmptyStr;
+        Okex: CellText := EmptyStr;
+        Poloniex: CellText := EmptyStr;
+      end;
   end;
 end;
 
@@ -114,21 +142,21 @@ procedure TfrmSettings.vstExchangesInitNode(Sender: TBaseVirtualTree;
 var
   LUseExchange: Boolean;
 begin
-  if Assigned(FSettigns) then
+  if Assigned(FExchangeManager) then
   begin
     Node^.CheckType := ctCheckBox;
 
     case TExchange(Node^.Index) of
-      BiBox: LUseExchange := FSettigns.UseBiBox;
-      Binance: LUseExchange := FSettigns.UseBinance;
-      Bitfinex: LUseExchange := FSettigns.UseBitfinex;
-      Bitstamp: LUseExchange := FSettigns.UseBitstamp;
-      Bittrex: LUseExchange := FSettigns.UseBittrex;
-      HitBTC: LUseExchange := FSettigns.UseHitBTC;
-      Huobi: LUseExchange := FSettigns.UseHuobi;
-      Kraken: LUseExchange := FSettigns.UseKraken;
-      Okex: LUseExchange := FSettigns.UseOkex;
-      Poloniex: LUseExchange := False;
+      BiBox: LUseExchange := FExchangeManager.Settings.UseBiBox;
+      Binance: LUseExchange := FExchangeManager.Settings.UseBinance;
+      Bitfinex: LUseExchange := FExchangeManager.Settings.UseBitfinex;
+      Bitstamp: LUseExchange := FExchangeManager.Settings.UseBitstamp;
+      Bittrex: LUseExchange := FExchangeManager.Settings.UseBittrex;
+      HitBTC: LUseExchange := FExchangeManager.Settings.UseHitBTC;
+      Huobi: LUseExchange := FExchangeManager.Settings.UseHuobi;
+      Kraken: LUseExchange := FExchangeManager.Settings.UseKraken;
+      Okex: LUseExchange := FExchangeManager.Settings.UseOkex;
+    else LUseExchange := False;
     end;
 
     if LUseExchange then

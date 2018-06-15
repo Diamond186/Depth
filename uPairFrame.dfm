@@ -91,7 +91,7 @@ object framePair: TframePair
         object Label1: TLabel
           Left = 0
           Top = 17
-          Width = 205
+          Width = 70
           Height = 21
           Align = alTop
           Alignment = taCenter
@@ -102,13 +102,11 @@ object framePair: TframePair
           Font.Name = 'Segoe UI'
           Font.Style = []
           ParentFont = False
-          ExplicitTop = 0
-          ExplicitWidth = 70
         end
         object Label2: TLabel
           Left = 0
           Top = 0
-          Width = 205
+          Width = 54
           Height = 17
           Align = alTop
           Alignment = taCenter
@@ -119,14 +117,12 @@ object framePair: TframePair
           Font.Name = 'Segoe UI'
           Font.Style = []
           ParentFont = False
-          ExplicitTop = 21
-          ExplicitWidth = 54
         end
         object lPrice: TLabel
           Left = 0
           Top = 38
-          Width = 205
-          Height = 19
+          Width = 28
+          Height = 17
           Align = alClient
           Alignment = taCenter
           Caption = 'Price'
@@ -137,8 +133,6 @@ object framePair: TframePair
           Font.Style = []
           ParentFont = False
           Layout = tlCenter
-          ExplicitWidth = 28
-          ExplicitHeight = 17
         end
       end
       object pRightHeader: TPanel
@@ -298,8 +292,8 @@ object framePair: TframePair
       object lAmount24h: TLabel
         Left = 0
         Top = 16
-        Width = 250
-        Height = 20
+        Width = 69
+        Height = 17
         Align = alClient
         Alignment = taCenter
         Caption = 'lAmount24h'
@@ -309,8 +303,6 @@ object framePair: TframePair
         Font.Name = 'Segoe UI'
         Font.Style = []
         ParentFont = False
-        ExplicitWidth = 69
-        ExplicitHeight = 17
       end
       object gpTotal: TGridPanel
         Left = 0
@@ -345,8 +337,8 @@ object framePair: TframePair
         object lTotalBids: TLabel
           Left = 0
           Top = 0
-          Width = 125
-          Height = 16
+          Width = 55
+          Height = 17
           Align = alClient
           Alignment = taCenter
           Caption = 'lTotalBids'
@@ -356,14 +348,12 @@ object framePair: TframePair
           Font.Name = 'Segoe UI'
           Font.Style = []
           ParentFont = False
-          ExplicitWidth = 55
-          ExplicitHeight = 17
         end
         object lTotalAsks: TLabel
           Left = 125
           Top = 0
-          Width = 125
-          Height = 16
+          Width = 57
+          Height = 17
           Align = alClient
           Alignment = taCenter
           Caption = 'lTotalAsks'
@@ -373,8 +363,6 @@ object framePair: TframePair
           Font.Name = 'Segoe UI'
           Font.Style = []
           ParentFont = False
-          ExplicitWidth = 57
-          ExplicitHeight = 17
         end
       end
     end
