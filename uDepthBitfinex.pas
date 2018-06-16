@@ -10,9 +10,11 @@ type
   TDepthBitfinex = class(TCustomDepth)
     private
       const
-        depthBinance = 'https://api.bitfinex.com/v1/book/BTCUSD?limit_bids=3000&limit_asks=3000&group=1';
+        cDepthURL = 'https://api.bitfinex.com/v1/book/BTCUSD?limit_bids=3000&limit_asks=3000&group=1';
+        c24hURL = 'https://api.bitfinex.com/v1/pubticker/BTCUSD';
 
       procedure ParseResponse(const aResponse: string);
+      procedure ParseResponse24h(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -77,10 +79,36 @@ begin
   end;
 end;
 
+procedure TDepthBitfinex.ParseResponse24h(const aResponse: string);
+var
+  LJSON: TJSONValue;
+  LStr: String;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      if LJSON.TryGetValue<String>('last_price', LStr) then
+        FStatistics24h.LastPrice := LStr.ToExtended;
+
+      if LJSON.TryGetValue<String>('high', LStr) then
+        FStatistics24h.HighPrice := LStr.ToExtended;
+
+      if LJSON.TryGetValue<String>('low', LStr) then
+        FStatistics24h.LowPrice := LStr.ToExtended;
+
+      if LJSON.TryGetValue<String>('volume', LStr) then
+        FStatistics24h.Volume := LStr.ToExtended;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+end;
+
 procedure TDepthBitfinex.Statistics24h;
 begin
   inherited;
-
+  ParseResponse24h(FIdHTTP.Get(c24hURL));
 end;
 
 procedure TDepthBitfinex.Depth;
@@ -90,7 +118,7 @@ begin
   inherited;
 
   try
-    LRes := FIdHTTP.Get(depthBinance);
+    LRes := FIdHTTP.Get(cDepthURL);
   except
     on E: Exception do
     begin

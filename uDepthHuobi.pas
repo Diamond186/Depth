@@ -11,8 +11,10 @@ type
     private
       const
         depthURL = 'https://api.huobi.pro/market/depth?symbol=btcusdt&type=step0';
+        c24hURL = 'https://api.huobi.pro/market/detail?symbol=btcusdt';
 
       procedure ParseResponse(const aResponse: string);
+      procedure ParseResponse24h(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -83,10 +85,39 @@ begin
   end;
 end;
 
+procedure TDepthHuobi.ParseResponse24h(const aResponse: string);
+var
+  LJSON, LObj: TJSONValue;
+  LStr: String;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LObj := LJSON.GetValue<TJSONValue>('tick');
+
+      if LObj.TryGetValue<String>('close', LStr) then
+        FStatistics24h.LastPrice := LStr.ToExtended;
+
+      if LObj.TryGetValue<String>('high', LStr) then
+        FStatistics24h.HighPrice := LStr.ToExtended;
+
+      if LObj.TryGetValue<String>('low', LStr) then
+        FStatistics24h.LowPrice := LStr.ToExtended;
+
+      if LObj.TryGetValue<String>('amount', LStr) then
+        FStatistics24h.Volume := LStr.ToExtended;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+end;
+
 procedure TDepthHuobi.Statistics24h;
 begin
   inherited;
 
+  ParseResponse24h(FIdHTTP.Get(c24hURL));
 end;
 
 procedure TDepthHuobi.Depth;

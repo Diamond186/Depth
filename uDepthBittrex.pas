@@ -83,32 +83,28 @@ end;
 
 procedure TDepthBittrex.ParseResponseStatis24h(const aResponse: string);
 var
-  LJSON: TJSONValue;
+  LJSON, LObj: TJSONValue;
   LStr: String;
 begin
   if not aResponse.IsEmpty then
   begin
     LJSON := TJSONObject.ParseJSONValue(aResponse);
     try
-      if LJSON.TryGetValue<String>('MarketName', LStr) then
+      LObj := LJSON.GetValue<TJSONArray>('result').Items[0];
+
+      if LObj.TryGetValue<String>('MarketName', LStr) then
         FStatistics24h.Symbol := LStr;
 
-      if LJSON.TryGetValue<String>('Last', LStr) then
+      if LObj.TryGetValue<String>('Last', LStr) then
         FStatistics24h.LastPrice := LStr.ToExtended;
 
-      if LJSON.TryGetValue<String>('Bid', LStr) then
-        FStatistics24h.BidPrice := LStr.ToExtended;
-
-      if LJSON.TryGetValue<String>('Ask', LStr) then
-        FStatistics24h.AskPrice := LStr.ToExtended;
-
-      if LJSON.TryGetValue<String>('High', LStr) then
+      if LObj.TryGetValue<String>('High', LStr) then
         FStatistics24h.HighPrice := LStr.ToExtended;
 
-      if LJSON.TryGetValue<String>('Low', LStr) then
+      if LObj.TryGetValue<String>('Low', LStr) then
         FStatistics24h.LowPrice := LStr.ToExtended;
 
-      if LJSON.TryGetValue<String>('BaseVolume', LStr) then
+      if LObj.TryGetValue<String>('Volume', LStr) then
         FStatistics24h.Volume := LStr.ToExtended;
     finally
       FreeAndNil(LJSON);

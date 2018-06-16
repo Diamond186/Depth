@@ -144,4 +144,5 @@ function TExchangeHelper.ToString: string;
 begin
   Result := cArrExchangesText[Self];
 end;
+
 end.

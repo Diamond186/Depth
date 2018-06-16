@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, Vcl.ExtCtrls, uSettigns,
-  VirtualTrees, uExchangeManager;
+  VirtualTrees, uExchangeManager, uExchangeClass;
 
 type
   TfrmSettings = class(TForm)
@@ -25,6 +25,9 @@ type
     procedure vstExchangesChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
     FExchangeManager: TExchangeManager;
+    FOldUpdateStatistics24h: TOnUpdateStatistics24h;
+
+    procedure DoUpdateStatistics24(const aStatistics24h: TStatistics24h);
   public
     class function ShowSettings(const aExchandeManager: TExchangeManager): Boolean;
   end;
@@ -33,10 +36,15 @@ implementation
 
 {$R *.dfm}
 
-uses
-  uExchangeClass;
-
 { TfrmSettings }
+
+procedure TfrmSettings.DoUpdateStatistics24(const aStatistics24h: TStatistics24h);
+begin
+  if Assigned(FOldUpdateStatistics24h) then
+    FOldUpdateStatistics24h(aStatistics24h);
+
+  vstExchanges.Refresh;
+end;
 
 class function TfrmSettings.ShowSettings(const aExchandeManager: TExchangeManager): Boolean;
 var
@@ -55,6 +63,9 @@ begin
     eMinAmount.Text := FloatToStr(aExchandeManager.Settings.MinPrice);
     eBoldAmount.Text := FloatToStr(aExchandeManager.Settings.BoldPrice);
     cbPairs.Text := aExchandeManager.Settings.Pair;
+
+    FOldUpdateStatistics24h := aExchandeManager.OnUpdateStatistics24h;
+    aExchandeManager.OnUpdateStatistics24h := DoUpdateStatistics24;
 
     Result := ShowModal = mrOk;
 
@@ -87,6 +98,8 @@ begin
       aExchandeManager.Settings.Save;
     end;
   finally
+    aExchandeManager.OnUpdateStatistics24h := FOldUpdateStatistics24h;
+
     Free;
   end;
 end;
@@ -109,29 +122,29 @@ begin
 
     1:
       case TExchange(Node^.Index) of
-        BiBox: CellText := EmptyStr;
+        BiBox: CellText := Format('%n', [FExchangeManager.BiBox.Statis24h.LastPrice]);
         Binance: CellText := Format('%n', [FExchangeManager.Binance.Statis24h.LastPrice]);
-        Bitfinex: CellText := EmptyStr;
-        Bitstamp: CellText := EmptyStr;
-        Bittrex: CellText := EmptyStr;
-        HitBTC: CellText := EmptyStr;
-        Huobi: CellText := EmptyStr;
-        Kraken: CellText := EmptyStr;
-        Okex: CellText := EmptyStr;
+        Bitfinex: CellText := Format('%n', [FExchangeManager.Bitfinex.Statis24h.LastPrice]);
+        Bitstamp: CellText := Format('%n', [FExchangeManager.Bitstamp.Statis24h.LastPrice]);
+        Bittrex: CellText := Format('%n', [FExchangeManager.Bittrex.Statis24h.LastPrice]);
+        HitBTC: CellText := Format('%n', [FExchangeManager.HitBTC.Statis24h.LastPrice]);
+        Huobi: CellText := Format('%n', [FExchangeManager.Huobi.Statis24h.LastPrice]);
+        Kraken: CellText := Format('%n', [FExchangeManager.Kraken.Statis24h.LastPrice]);
+        Okex: CellText := Format('%n', [FExchangeManager.Okex.Statis24h.LastPrice]);
         Poloniex: CellText := EmptyStr;
       end;
 
     2:
       case TExchange(Node^.Index) of
-        BiBox: CellText := EmptyStr;
+        BiBox: CellText := Format('%n', [FExchangeManager.BiBox.Statis24h.Volume]);
         Binance: CellText := Format('%n', [FExchangeManager.Binance.Statis24h.Volume]);
-        Bitfinex: CellText := EmptyStr;
-        Bitstamp: CellText := EmptyStr;
-        Bittrex: CellText := EmptyStr;
-        HitBTC: CellText := EmptyStr;
-        Huobi: CellText := EmptyStr;
-        Kraken: CellText := EmptyStr;
-        Okex: CellText := EmptyStr;
+        Bitfinex: CellText := Format('%n', [FExchangeManager.Bitfinex.Statis24h.Volume]);
+        Bitstamp: CellText := Format('%n', [FExchangeManager.Bitstamp.Statis24h.Volume]);
+        Bittrex: CellText := Format('%n', [FExchangeManager.Bittrex.Statis24h.Volume]);
+        HitBTC: CellText := Format('%n', [FExchangeManager.HitBTC.Statis24h.Volume]);
+        Huobi: CellText := Format('%n', [FExchangeManager.Huobi.Statis24h.Volume]);
+        Kraken: CellText := Format('%n', [FExchangeManager.Kraken.Statis24h.Volume]);
+        Okex: CellText := Format('%n', [FExchangeManager.Okex.Statis24h.Volume]);
         Poloniex: CellText := EmptyStr;
       end;
   end;
@@ -144,6 +157,9 @@ var
 begin
   if Assigned(FExchangeManager) then
   begin
+    if TExchange(Node^.Index) = TExchange.Poloniex then
+      Include(InitialStates, ivsDisabled);
+
     Node^.CheckType := ctCheckBox;
 
     case TExchange(Node^.Index) of

@@ -19,7 +19,7 @@ type
       procedure Depth; override;
       procedure Statistics24h; override;
     public
-      property Statis24h: TStatistics24h read FStatistics24h;
+
   end;
 
 implementation
@@ -76,7 +76,7 @@ begin
         FStatistics24h.LowPrice := LStr.ToExtended;
 
       if LJSON.TryGetValue<String>('volume', LStr) then
-        FStatistics24h.Volume := LStr.ToExtended * FStatistics24h.LastPrice;
+        FStatistics24h.Volume := LStr.ToExtended;
 
       if LJSON.TryGetValue<Integer>('count', i) then
         FStatistics24h.Count := i;
@@ -138,6 +138,7 @@ end;
 procedure TDepthBinance.Statistics24h;
 begin
   inherited;
+
   ParseResponse24h(FIdHTTP.Get(c24hURL));
 end;
 

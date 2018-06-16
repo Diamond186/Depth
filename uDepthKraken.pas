@@ -11,8 +11,10 @@ type
     private
       const
         depthURL = 'https://api.kraken.com/0/public/Depth?pair=XBTUSD&count=1000';
+        c24hURL = 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD';
 
       procedure ParseResponse(const aResponse: string);
+      procedure ParseResponse24h(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -83,10 +85,43 @@ begin
   end;
 end;
 
+procedure TDepthKraken.ParseResponse24h(const aResponse: string);
+var
+  LJSON, LObj: TJSONValue;
+  LArrStr: TJSONArray;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LObj := LJSON.GetValue<TJSONValue>('result');
+      LObj := LObj.GetValue<TJSONValue>('XXBTZUSD');
+
+      if Assigned(LObj) then
+      begin
+        if LObj.TryGetValue<TJSONArray>('c', LArrStr) then
+          FStatistics24h.LastPrice := LArrStr.Items[0].Value.ToExtended;
+
+        if LObj.TryGetValue<TJSONArray>('h', LArrStr) then
+          FStatistics24h.HighPrice := LArrStr.Items[1].Value.ToExtended;
+
+        if LObj.TryGetValue<TJSONArray>('l', LArrStr) then
+          FStatistics24h.LowPrice := LArrStr.Items[1].Value.ToExtended;
+
+        if LObj.TryGetValue<TJSONArray>('v', LArrStr) then
+          FStatistics24h.Volume := LArrStr.Items[1].Value.ToExtended;
+      end;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+end;
+
 procedure TDepthKraken.Statistics24h;
 begin
   inherited;
 
+  ParseResponse24h(FIdHTTP.Get(c24hURL));
 end;
 
 procedure TDepthKraken.Depth;

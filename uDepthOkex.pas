@@ -11,8 +11,10 @@ type
     private
       const
         depthURL = 'https://www.okex.com/api/v1/depth.do?symbol=btc_usdt';
+        c24hURL = 'https://www.okex.com/api/v1/ticker.do?symbol=btc_usdt';
 
       procedure ParseResponse(const aResponse: string);
+      procedure ParseResponse24h(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -83,10 +85,39 @@ begin
   end;
 end;
 
+procedure TDepthOkex.ParseResponse24h(const aResponse: string);
+var
+  LJSON, LObj: TJSONValue;
+  LStr: String;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LObj := LJSON.GetValue<TJSONValue>('ticker');
+
+      if LObj.TryGetValue<String>('last', LStr) then
+        FStatistics24h.LastPrice := LStr.ToExtended;
+
+      if LObj.TryGetValue<String>('high', LStr) then
+        FStatistics24h.HighPrice := LStr.ToExtended;
+
+      if LObj.TryGetValue<String>('low', LStr) then
+        FStatistics24h.LowPrice := LStr.ToExtended;
+
+      if LObj.TryGetValue<String>('vol', LStr) then
+        FStatistics24h.Volume := LStr.ToExtended;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+end;
+
 procedure TDepthOkex.Statistics24h;
 begin
   inherited;
 
+  ParseResponse24h(FIdHTTP.Get(c24hURL));
 end;
 
 procedure TDepthOkex.Depth;

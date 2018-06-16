@@ -36,6 +36,7 @@ type
       property OnDepthManage: TProc read GetDepthManage write SetDepthManage;
       property Active: Boolean read FActive write FActive;
       property ApplyUpdate: Boolean read FApplyUpdate write SetApplyUpdate;
+      property Statis24h: TStatistics24h read FStatistics24h;
   end;
 
 implementation
@@ -50,8 +51,8 @@ begin
   if FActive then
     TThread.CreateAnonymousThread(procedure
     begin
-      Depth;
       Statistics24h;
+      Depth;
     end).Start
   else
   begin

@@ -33,7 +33,7 @@ type
       FBitstamp: TDepthBitstamp;
       FOkex: TDepthOkex;
       FHuobi: TDepthHuobi;
-      FHitbtc: TDepthHitbtc;
+      FHitBTC: TDepthHitBTC;
       FBibox: TDepthBibox;
 
       FDepthBidsList,
@@ -67,7 +67,15 @@ type
       property Active: Boolean read FActive write SetActive;
       property Settings: ISettigns read FSettins;
 
+      property BiBox: TDepthBibox read FBibox;
       property Binance: TDepthBinance read FBinance;
+      property Bittrex: TDepthBittrex read FBittrex;
+      property Bitfinex: TDepthBitfinex read FBitfinex;
+      property Kraken: TDepthKraken read FKraken;
+      property Bitstamp: TDepthBitstamp read FBitstamp;
+      property Okex: TDepthOkex read FOkex;
+      property Huobi: TDepthHuobi read FHuobi;
+      property HitBTC: TDepthHitBTC read FHitBTC;
   end;
 
 implementation
@@ -118,6 +126,9 @@ begin
     FDepthAsksList.AddRange(FHitbtc.ArrDepthAsks);
     FDepthAsksList.AddRange(FBibox.ArrDepthAsks);
 
+    DeleteWhenLess(FDepthBidsList, FSettins.MinPrice);
+    DeleteWhenLess(FDepthAsksList, FSettins.MinPrice);
+
     FDepthBidsList.Sort(FBidsComparison);
     FDepthAsksList.Sort(FAsksComparison);
 
@@ -141,9 +152,6 @@ begin
       end
       else
         Inc(i);
-
-    DeleteWhenLess(FDepthBidsList, FSettins.MinPrice);
-    DeleteWhenLess(FDepthAsksList, FSettins.MinPrice);
 
     LTotalBids := GetTotalAmount(FDepthBidsList);
     LTotalAsks := GetTotalAmount(FDepthAsksList);
