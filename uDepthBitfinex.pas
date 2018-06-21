@@ -18,8 +18,9 @@ type
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
+      procedure TradesHistory; override;
     public
-
+      constructor Create; override;
   end;
 
 implementation
@@ -108,7 +109,25 @@ end;
 procedure TDepthBitfinex.Statistics24h;
 begin
   inherited;
-  ParseResponse24h(FIdHTTP.Get(c24hURL));
+
+  try
+    ParseResponse24h(FIdHTTP.Get(c24hURL));
+  except
+    // ignore error
+  end;
+end;
+
+procedure TDepthBitfinex.TradesHistory;
+begin
+  inherited;
+
+end;
+
+constructor TDepthBitfinex.Create;
+begin
+  inherited;
+
+  FExchange := TExchange.Bitfinex;
 end;
 
 procedure TDepthBitfinex.Depth;

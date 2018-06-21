@@ -27,7 +27,7 @@ type
     FExchangeManager: TExchangeManager;
     FOldUpdateStatistics24h: TOnUpdateStatistics24h;
 
-    procedure DoUpdateStatistics24(const aStatistics24h: TStatistics24h);
+    procedure DoUpdateStatistics24;
   public
     class function ShowSettings(const aExchandeManager: TExchangeManager): Boolean;
   end;
@@ -38,10 +38,10 @@ implementation
 
 { TfrmSettings }
 
-procedure TfrmSettings.DoUpdateStatistics24(const aStatistics24h: TStatistics24h);
+procedure TfrmSettings.DoUpdateStatistics24;
 begin
   if Assigned(FOldUpdateStatistics24h) then
-    FOldUpdateStatistics24h(aStatistics24h);
+    FOldUpdateStatistics24h;
 
   vstExchanges.Refresh;
 end;

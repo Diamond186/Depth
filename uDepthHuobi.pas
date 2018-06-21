@@ -18,8 +18,9 @@ type
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
+      procedure TradesHistory; override;
     public
-      
+      constructor Create; override;
   end;
 
 implementation
@@ -117,7 +118,24 @@ procedure TDepthHuobi.Statistics24h;
 begin
   inherited;
 
-  ParseResponse24h(FIdHTTP.Get(c24hURL));
+  try
+    ParseResponse24h(FIdHTTP.Get(c24hURL));
+  except
+    // ignore error
+  end;
+end;
+
+procedure TDepthHuobi.TradesHistory;
+begin
+  inherited;
+
+end;
+
+constructor TDepthHuobi.Create;
+begin
+  inherited;
+
+  FExchange := TExchange.Huobi;
 end;
 
 procedure TDepthHuobi.Depth;

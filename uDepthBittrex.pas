@@ -18,8 +18,9 @@ type
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
+      procedure TradesHistory; override;
     public
-      
+      constructor Create; override;
   end;
 
 implementation
@@ -116,7 +117,24 @@ procedure TDepthBittrex.Statistics24h;
 begin
   inherited;
 
-  ParseResponseStatis24h(FIdHTTP.Get(StatisURL));
+  try
+    ParseResponseStatis24h(FIdHTTP.Get(StatisURL));
+  except
+    // ignore error
+  end;
+end;
+
+procedure TDepthBittrex.TradesHistory;
+begin
+  inherited;
+
+end;
+
+constructor TDepthBittrex.Create;
+begin
+  inherited;
+
+  FExchange := TExchange.Bittrex;
 end;
 
 procedure TDepthBittrex.Depth;

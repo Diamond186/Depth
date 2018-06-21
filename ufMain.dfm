@@ -3,8 +3,8 @@ object frmMain: TfrmMain
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Depth'
-  ClientHeight = 447
-  ClientWidth = 313
+  ClientHeight = 641
+  ClientWidth = 284
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,10 +19,15 @@ object frmMain: TfrmMain
   PixelsPerInch = 96
   TextHeight = 13
   object MainMenu: TMainMenu
-    Left = 272
-    Top = 24
+    Left = 136
+    Top = 32
     object miSettings: TMenuItem
       Caption = 'Settings'
     end
+  end
+  object ApplicationEvents: TApplicationEvents
+    OnIdle = ApplicationEventsIdle
+    Left = 136
+    Top = 88
   end
 end

@@ -16,8 +16,9 @@ type
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
+      procedure TradesHistory; override;
     public
-      
+      constructor Create; override;
   end;
 
 implementation
@@ -81,6 +82,19 @@ procedure TDepthPoloniex.Statistics24h;
 begin
   inherited;
 
+end;
+
+procedure TDepthPoloniex.TradesHistory;
+begin
+  inherited;
+
+end;
+
+constructor TDepthPoloniex.Create;
+begin
+  inherited;
+
+  FExchange := TExchange.Poloniex;
 end;
 
 procedure TDepthPoloniex.Depth;

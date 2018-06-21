@@ -2,6 +2,9 @@ unit uSettigns;
 
 interface
 
+uses
+  uExchangeClass;
+
 type
   ISettigns = interface
     function GetBoldPrice: Currency;
@@ -19,6 +22,7 @@ type
     function GetUseHuobi: Boolean;
     function GetUseKraken: Boolean;
     function GetUseOkex: Boolean;
+    function  GetCurrentExchange: TExchange;
     procedure SetUseBiBox(const Value: Boolean);
     procedure SetUseBinance(const Value: Boolean);
     procedure SetUseBitfinex(const Value: Boolean);
@@ -28,9 +32,11 @@ type
     procedure SetUseHuobi(const Value: Boolean);
     procedure SetUseKraken(const Value: Boolean);
     procedure SetUseOkex(const Value: Boolean);
+    procedure SetCurrentExchange(const Value: TExchange);
 
-    procedure Load(const aPairName: string);
+    procedure Load(const aSectionName: string);
     procedure Save;
+    procedure Delete;
 
     property Pair: String read GetPair write SetPair;
     property MinPrice: Currency read GetMinPrice write SetMinPrice;
@@ -45,6 +51,8 @@ type
     property UseHuobi: Boolean read GetUseHuobi write SetUseHuobi;
     property UseKraken: Boolean read GetUseKraken write SetUseKraken;
     property UseOkex: Boolean read GetUseOkex write SetUseOkex;
+
+    property CurrentExchange: TExchange read GetCurrentExchange write SetCurrentExchange;
   end;
 
 function CreateSettigns: ISettigns;
@@ -58,7 +66,8 @@ uses
 type
   TSettigns = class(TInterfacedObject, ISettigns)
     private
-      FPair: String;
+      FPair,
+      FSectionName: String;
 
       FUseBiBox: Boolean;
       FUseBinance: Boolean;
@@ -74,6 +83,7 @@ type
       FBoldPrice: Currency;
 
       FFileName: string;
+      FCurrentExchange: TExchange;
 
       function GetBoldPrice: Currency;
       function GetMinPrice: Currency;
@@ -99,11 +109,14 @@ type
       procedure SetUseHuobi(const Value: Boolean);
       procedure SetUseKraken(const Value: Boolean);
       procedure SetUseOkex(const Value: Boolean);
+      function  GetCurrentExchange: TExchange;
+      procedure SetCurrentExchange(const Value: TExchange);
     public
       constructor Create;
 
-      procedure Load(const aPairName: string);
+      procedure Load(const aSectionName: string);
       procedure Save;
+      procedure Delete;
 
       property Pair: String read GetPair write SetPair;
       property MinPrice: Currency read GetMinPrice write SetMinPrice;
@@ -118,6 +131,8 @@ type
       property UseHuobi: Boolean read GetUseHuobi write SetUseHuobi;
       property UseKraken: Boolean read GetUseKraken write SetUseKraken;
       property UseOkex: Boolean read GetUseOkex write SetUseOkex;
+
+      property CurrentExchange: TExchange read GetCurrentExchange write SetCurrentExchange;
   end;
 
 function CreateSettigns: ISettigns;
@@ -132,9 +147,27 @@ begin
   FFileName := ExtractFilePath(ParamStr(0)) + 'Settings.ini';
 end;
 
+procedure TSettigns.Delete;
+begin
+  if FileExists(FFileName) then
+  with TMemIniFile.Create(FFileName) do
+  try
+    EraseSection(FSectionName);
+
+    UpdateFile;
+  finally
+    Free;
+  end;
+end;
+
 function TSettigns.GetBoldPrice: Currency;
 begin
   Result := FBoldPrice;
+end;
+
+function TSettigns.GetCurrentExchange: TExchange;
+begin
+  Result := FCurrentExchange;
 end;
 
 function TSettigns.GetMinPrice: Currency;
@@ -192,23 +225,40 @@ begin
   Result := FUseOkex;
 end;
 
-procedure TSettigns.Load(const aPairName: string);
+procedure TSettigns.Load(const aSectionName: string);
+var
+  LExchangeName: string;
 begin
   if FileExists(FFileName) then
   with TMemIniFile.Create(FFileName) do
   try
-    FPair := aPairName;
-    FMinPrice := ReadFloat(aPairName, 'MinPrice', 0);
-    FBoldPrice := ReadFloat(aPairName, 'BoldPrice', 0);
-    FUseOkex := ReadBool(FPair, 'UseOkex', True);
-    FUseKraken := ReadBool(FPair, 'UseKraken', True);
-    FUseHuobi := ReadBool(FPair, 'UseHuobi', True);
-    FUseHitBTC := ReadBool(FPair, 'UseHitBTC', True);
-    FUseBittrex := ReadBool(FPair, 'UseBittrex', True);
-    FUseBitstamp := ReadBool(FPair, 'UseBitstamp', True);
-    FUseBitfinex := ReadBool(FPair, 'UseBitfinex', True);
-    FUseBinance := ReadBool(FPair, 'UseBinance', True);
-    FUseBiBox := ReadBool(FPair, 'UseBiBox', True);
+    FSectionName := aSectionName;
+    FPair := ReadString(aSectionName, 'Pair', EmptyStr);
+    FMinPrice := ReadFloat(aSectionName, 'MinPrice', 2);
+    FBoldPrice := ReadFloat(aSectionName, 'BoldPrice', 100);
+    FUseOkex := ReadBool(aSectionName, TExchange.Okex.ToString, False);
+    FUseKraken := ReadBool(aSectionName, TExchange.Kraken.ToString, False);
+    FUseHuobi := ReadBool(aSectionName, TExchange.Huobi.ToString, False);
+    FUseHitBTC := ReadBool(aSectionName, TExchange.HitBTC.ToString, False);
+    FUseBittrex := ReadBool(aSectionName, TExchange.Bittrex.ToString, False);
+    FUseBitstamp := ReadBool(aSectionName, TExchange.Bitstamp.ToString, False);
+    FUseBitfinex := ReadBool(aSectionName, TExchange.Bitfinex.ToString, False);
+    FUseBinance := ReadBool(aSectionName, TExchange.Binance.ToString, False);
+    FUseBiBox := ReadBool(aSectionName, TExchange.BiBox.ToString, False);
+
+    LExchangeName := ReadString(aSectionName, 'CurrentExchange', EmptyStr);
+    if not LExchangeName.IsEmpty then
+      FCurrentExchange := TExchange.ExchangeFromString(LExchangeName)
+    else
+      if FUseOkex then FCurrentExchange := TExchange.Okex else
+      if FUseKraken then FCurrentExchange := TExchange.Kraken else
+      if FUseHuobi then FCurrentExchange := TExchange.Huobi else
+      if FUseHitBTC then FCurrentExchange := TExchange.HitBTC else
+      if FUseBittrex then FCurrentExchange := TExchange.Bittrex else
+      if FUseBitstamp then FCurrentExchange := TExchange.Bitstamp else
+      if FUseBitfinex then FCurrentExchange := TExchange.Bitfinex else
+      if FUseBinance then FCurrentExchange := TExchange.Binance else
+      if FUseBiBox then FCurrentExchange := TExchange.BiBox;
   finally
     Free;
   end;
@@ -219,17 +269,19 @@ begin
   if FileExists(FFileName) then
   with TMemIniFile.Create(FFileName) do
   try
-    WriteFloat(FPair, 'MinPrice', FMinPrice);
-    WriteFloat(FPair, 'BoldPrice', FBoldPrice);
-    WriteBool(FPair, 'UseOkex', FUseOkex);
-    WriteBool(FPair, 'UseKraken', FUseKraken);
-    WriteBool(FPair, 'UseHuobi', FUseHuobi);
-    WriteBool(FPair, 'UseHitBTC', FUseHitBTC);
-    WriteBool(FPair, 'UseBittrex', FUseBittrex);
-    WriteBool(FPair, 'UseBitstamp', FUseBitstamp);
-    WriteBool(FPair, 'UseBitfinex', FUseBitfinex);
-    WriteBool(FPair, 'UseBinance', FUseBinance);
-    WriteBool(FPair, 'UseBiBox', FUseBiBox);
+    WriteString(FSectionName, 'Pair', FPair);
+    WriteFloat(FSectionName, 'MinPrice', FMinPrice);
+    WriteFloat(FSectionName, 'BoldPrice', FBoldPrice);
+    WriteBool(FSectionName, TExchange.Okex.ToString, FUseOkex);
+    WriteBool(FSectionName, TExchange.Kraken.ToString, FUseKraken);
+    WriteBool(FSectionName, TExchange.Huobi.ToString, FUseHuobi);
+    WriteBool(FSectionName, TExchange.HitBTC.ToString, FUseHitBTC);
+    WriteBool(FSectionName, TExchange.Bittrex.ToString, FUseBittrex);
+    WriteBool(FSectionName, TExchange.Bitstamp.ToString, FUseBitstamp);
+    WriteBool(FSectionName, TExchange.Bitfinex.ToString, FUseBitfinex);
+    WriteBool(FSectionName, TExchange.Binance.ToString, FUseBinance);
+    WriteBool(FSectionName, TExchange.BiBox.ToString, FUseBiBox);
+    WriteString(FSectionName, 'CurrentExchange', FCurrentExchange.ToString);
 
     UpdateFile;
   finally
@@ -240,6 +292,11 @@ end;
 procedure TSettigns.SetBoldPrice(const Value: Currency);
 begin
   FBoldPrice := Value;
+end;
+
+procedure TSettigns.SetCurrentExchange(const Value: TExchange);
+begin
+  FCurrentExchange := Value;
 end;
 
 procedure TSettigns.SetMinPrice(const Value: Currency);

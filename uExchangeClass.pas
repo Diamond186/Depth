@@ -17,7 +17,19 @@ type
                                                            'Huobi', 'Kraken', 'Okex', 'Poloniex');
     public
       function ToString: string; overload; inline;
+      class function ExchangeFromString(const aExchangeName: string): TExchange; inline; static;
       class function Count: Integer; inline; static;
+  end;
+
+  TTrade = record
+    private
+      FAmount: Double;
+      FIsBuyerMaker: Boolean;
+    public
+      constructor Create(const aAmount: Double; const aIsBuyerMaker: Boolean);
+
+      property Amount: Double read FAmount;
+      property IsBuyerMaker: Boolean read FIsBuyerMaker;
   end;
 
   TPairDepth = class
@@ -78,12 +90,12 @@ type
   end;
 
   TOnUpdateDepth = procedure (const aBidsList, aAsksList: TList<TPairDepth>; const aTotalBids, aTotalAsks: Double) of Object;
-  TOnUpdateStatistics24h = procedure (const aStatistics24h: TStatistics24h) of Object;
+  TOnUpdateStatistics24h = procedure of Object;
 
 implementation
 
 uses
-  uSettigns,
+  uSettigns, System.StrUtils,
   System.Math;
 
 { TPairDepth }
@@ -140,9 +152,29 @@ begin
   Result := Length(cArrExchangesText);
 end;
 
+class function TExchangeHelper.ExchangeFromString(const aExchangeName: string): TExchange;
+var
+  LIndex: Integer;
+begin
+  LIndex := IndexText(aExchangeName, cArrExchangesText);
+
+  if LIndex > -1 then
+    Result := TExchange(LIndex)
+  else
+    raise Exception.Create('The name "' + aExchangeName + '" was not found.');
+end;
+
 function TExchangeHelper.ToString: string;
 begin
   Result := cArrExchangesText[Self];
+end;
+
+{ TTrade }
+
+constructor TTrade.Create(const aAmount: Double; const aIsBuyerMaker: Boolean);
+begin
+  FAmount := aAmount;
+  FIsBuyerMaker := aIsBuyerMaker;
 end;
 
 end.

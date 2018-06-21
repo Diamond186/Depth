@@ -17,12 +17,14 @@ uses
   , uDepthHuobi
   , uDepthOkex
   , uDepthHitbtc
-  , uDepthBibox;
+  , uDepthBibox
+  , uCustomDepth;
 
 type
   TExchangeManager = class
     private
       FTimer: TTimer;
+      FTradesHistoryTimer: TTimer;
       FActive: Boolean;
 
       FBinance: TDepthBinance;
@@ -41,6 +43,7 @@ type
 
       FOnUpdateDepth: TOnUpdateDepth;
       FOnUpdateStatistics24h: TOnUpdateStatistics24h;
+      FOnUpdateTradeHistory: TProc;
 
       FAsksComparison,
       FBidsComparison: IComparer<TPairDepth>;
@@ -53,16 +56,21 @@ type
       procedure DeleteWhenLess(aList: TList<TPairDepth>; const aMinAmount: Double);
       function  GetTotalAmount(const aList: TList<TPairDepth>): Double;
       procedure DoTimer(Sender: TObject);
+      procedure DoTradesHistoryTimer(Sender: TObject);
       procedure SetActive(const Value: Boolean);
     public
       constructor Create(const aSettins: ISettigns);
       destructor  Destroy; override;
 
-      procedure UpdateActiveExchange;
       procedure BeginManage;
+      procedure UpdateActiveExchange;
+      procedure BeginTradeHistory;
+
+      function  GetDepthFromExchange(const aExchage: TExchange): TCustomDepth;
 
       property OnUpdateDepth: TOnUpdateDepth read FOnUpdateDepth write FOnUpdateDepth;
       property OnUpdateStatistics24h: TOnUpdateStatistics24h read FOnUpdateStatistics24h write FOnUpdateStatistics24h;
+      property OnUpdateTradeHistory: TProc read FOnUpdateTradeHistory write FOnUpdateTradeHistory;
 
       property Active: Boolean read FActive write SetActive;
       property Settings: ISettigns read FSettins;
@@ -160,7 +168,7 @@ begin
     procedure
     begin
       if Assigned(FOnUpdateStatistics24h) then
-        FOnUpdateStatistics24h(FBinance.Statis24h);
+        FOnUpdateStatistics24h;
 
       if Assigned(FOnUpdateDepth) then
         FOnUpdateDepth(FDepthBidsList, FDepthAsksList, LTotalBids, LTotalAsks);
@@ -197,6 +205,21 @@ begin
   end;
 end;
 
+function TExchangeManager.GetDepthFromExchange(const aExchage: TExchange): TCustomDepth;
+begin
+  case aExchage of
+    TExchange.BiBox: Result := FBibox;
+    TExchange.Binance: Result := FBinance;
+    TExchange.Bitfinex: Result := FBitfinex;
+    TExchange.Bitstamp: Result := FBitstamp;
+    TExchange.Bittrex: Result := FBittrex;
+    TExchange.HitBTC: Result := FHitBTC;
+    TExchange.Huobi: Result := FHuobi;
+    TExchange.Kraken: Result := FKraken;
+    TExchange.Okex: Result := FOkex;
+  end;
+end;
+
 function TExchangeManager.GetTotalAmount(const aList: TList<TPairDepth>): Double;
 var
   LPair: TPairDepth;
@@ -226,6 +249,8 @@ begin
   FHuobi.Active := FSettins.UseHuobi;
   FHitbtc.Active := FSettins.UseHitBTC;
   FBibox.Active := FSettins.UseBiBox;
+
+  Active := True;
 end;
 
 procedure TExchangeManager.BeginManage;
@@ -240,6 +265,19 @@ begin
   FHitbtc.BeginManage;
   FBibox.BeginManage;
 //  FPoloniex.BeginManage;
+end;
+
+procedure TExchangeManager.BeginTradeHistory;
+begin
+  FBinance.BeginTradeHistory;
+  FBittrex.BeginTradeHistory;
+  FBitfinex.BeginTradeHistory;
+  FKraken.BeginTradeHistory;
+  FBitstamp.BeginTradeHistory;
+  FOkex.BeginTradeHistory;
+  FHuobi.BeginTradeHistory;
+  FHitbtc.BeginTradeHistory;
+  FBibox.BeginTradeHistory;
 end;
 
 constructor TExchangeManager.Create(const aSettins: ISettigns);
@@ -269,7 +307,6 @@ begin
         else
           Result := -1;
     end);
-
 
   FDepthBidsList := TList<TPairDepth>.Create;
   FDepthAsksList := TList<TPairDepth>.Create;
@@ -317,6 +354,11 @@ begin
   FTimer.Enabled := False;
   FTimer.Interval := 5000;
   FTimer.OnTimer := DoTimer;
+
+  FTradesHistoryTimer := TTimer.Create(nil);
+  FTradesHistoryTimer.Enabled := False;
+  FTradesHistoryTimer.Interval := 1000;
+  FTradesHistoryTimer.OnTimer := DoTradesHistoryTimer;
 end;
 
 destructor TExchangeManager.Destroy;
@@ -352,6 +394,14 @@ begin
 
   if Active then
     BeginManage;
+end;
+
+procedure TExchangeManager.DoTradesHistoryTimer(Sender: TObject);
+begin
+  FTradesHistoryTimer.Enabled := False;
+
+  if Active then
+    BeginTradeHistory;
 end;
 
 end.

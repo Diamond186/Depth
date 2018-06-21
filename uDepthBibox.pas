@@ -18,8 +18,9 @@ type
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
+      procedure TradesHistory; override;
     public
-
+      constructor Create; override;
   end;
 
 implementation
@@ -113,7 +114,24 @@ procedure TDepthBibox.Statistics24h;
 begin
   inherited;
 
-  ParseResponse24h(FIdHTTP.Get(c24hURL));
+  try
+    ParseResponse24h(FIdHTTP.Get(c24hURL));
+  except
+    // ignore error
+  end;
+end;
+
+procedure TDepthBibox.TradesHistory;
+begin
+  inherited;
+
+end;
+
+constructor TDepthBibox.Create;
+begin
+  inherited;
+
+  FExchange := TExchange.BiBox;
 end;
 
 procedure TDepthBibox.Depth;

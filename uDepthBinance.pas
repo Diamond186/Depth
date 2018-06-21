@@ -12,14 +12,18 @@ type
       const
         cDepthURL = 'https://api.binance.com/api/v1/depth?symbol=BTCUSDT&limit=1000';
         c24hURL = 'https://api.binance.com/api/v1/ticker/24hr?symbol=BTCUSDT';
+        cTradesHistoryURL = 'https://api.binance.com/api/v1/trades?symbol=BTCUSDT&limit=100';
+
 
       procedure ParseResponseDepth(const aResponse: string);
       procedure ParseResponse24h(const aResponse: string);
+      procedure ParseResponseTradesHistory(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
+      procedure TradesHistory; override;
     public
-
+      constructor Create; override;
   end;
 
 implementation
@@ -135,11 +139,78 @@ begin
   end;
 end;
 
+procedure TDepthBinance.ParseResponseTradesHistory(const aResponse: string);
+var
+  LJSON: TJSONValue;
+  LArr: TJSONArray;
+  i, LTime: Integer;
+  LAmount: Double;
+  LIsBuyerMaker: Boolean;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    FSumBidsTrades := 0;
+    FSumAsksTrades := 0;
+    FTradesList.Clear;
+
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LArr := LJSON.GetValue<TJSONArray>;
+
+      if LArr.Count > 0 then
+      begin
+        if FLastTradeHistoryTime = 0 then
+          FLastTradeHistoryTime := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
+
+        for i := LArr.Count - 1 downto 0 do
+        begin
+          LTime := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
+
+          if LTime > FLastTradeHistoryTime - cIntervalTradeHistory then
+          begin
+            LAmount := LArr.Items[LArr.Count - 1].GetValue<string>('qty').ToDouble;
+            LIsBuyerMaker := LArr.Items[LArr.Count - 1].GetValue<Boolean>('isBuyerMaker');
+
+            if LIsBuyerMaker then
+              FSumBidsTrades := FSumBidsTrades + LAmount
+            else
+              FSumAsksTrades := FSumAsksTrades + LAmount;
+
+            FTradesList.Add(TTrade.Create(LAmount, LIsBuyerMaker));
+          end;
+        end;
+      end;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+
+  Self.TradeHistoryApplyUpdate := True;
+end;
+
 procedure TDepthBinance.Statistics24h;
 begin
   inherited;
 
-  ParseResponse24h(FIdHTTP.Get(c24hURL));
+  try
+    ParseResponse24h(FIdHTTP.Get(c24hURL));
+  except
+    // ignore error
+  end;
+end;
+
+procedure TDepthBinance.TradesHistory;
+begin
+  inherited;
+
+  ParseResponseTradesHistory(FIdHTTP.Get(cTradesHistoryURL));
+end;
+
+constructor TDepthBinance.Create;
+begin
+  inherited;
+
+  FExchange := TExchange.Binance;
 end;
 
 procedure TDepthBinance.Depth;

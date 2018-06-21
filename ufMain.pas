@@ -8,14 +8,16 @@ uses
 
   , uPairFrame
 
-  , Vcl.Menus;
+  , Vcl.Menus, Vcl.AppEvnts;
 
 type
   TfrmMain = class(TForm)
     MainMenu: TMainMenu;
     miSettings: TMenuItem;
+    ApplicationEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure ApplicationEventsIdle(Sender: TObject; var Done: Boolean);
   private
 
   public
@@ -31,6 +33,13 @@ implementation
 
 uses
   System.IniFiles;
+
+procedure TfrmMain.ApplicationEventsIdle(Sender: TObject; var Done: Boolean);
+begin
+  AutoSize := False;
+  Constraints.MaxWidth := Width;
+  Constraints.MinWidth := Width;
+end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 const
@@ -56,6 +65,8 @@ begin
     finally
       FreeAndNil(LSections);
     end;
+
+    AutoSize := True;
   finally
     Free;
   end;

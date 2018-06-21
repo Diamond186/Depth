@@ -1,11 +1,6 @@
 program Depth;
 
 uses
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   Vcl.Forms,
   ufMain in 'ufMain.pas' {frmMain},
   uDepthBinance in 'uDepthBinance.pas',
