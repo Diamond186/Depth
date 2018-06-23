@@ -65,6 +65,7 @@ type
       procedure BeginManage;
       procedure UpdateActiveExchange;
       procedure BeginTradeHistory;
+      procedure BeginStatistics24h;
 
       function  GetDepthFromExchange(const aExchage: TExchange): TCustomDepth;
 
@@ -216,7 +217,9 @@ begin
     TExchange.HitBTC: Result := FHitBTC;
     TExchange.Huobi: Result := FHuobi;
     TExchange.Kraken: Result := FKraken;
-    TExchange.Okex: Result := FOkex;
+    TExchange.Okex: Result := FOkex
+  else
+    Result := nil;
   end;
 end;
 
@@ -265,6 +268,19 @@ begin
   FHitbtc.BeginManage;
   FBibox.BeginManage;
 //  FPoloniex.BeginManage;
+end;
+
+procedure TExchangeManager.BeginStatistics24h;
+begin
+  FBinance.BeginStatistics24h;
+  FBittrex.BeginStatistics24h;
+  FBitfinex.BeginStatistics24h;
+  FKraken.BeginStatistics24h;
+  FBitstamp.BeginStatistics24h;
+  FOkex.BeginStatistics24h;
+  FHuobi.BeginStatistics24h;
+  FHitbtc.BeginStatistics24h;
+  FBibox.BeginStatistics24h;
 end;
 
 procedure TExchangeManager.BeginTradeHistory;

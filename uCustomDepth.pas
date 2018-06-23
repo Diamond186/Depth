@@ -44,6 +44,7 @@ type
 
       procedure BeginManage;
       procedure BeginTradeHistory;
+      procedure BeginStatistics24h;
 
       function ToString: string; override;
       function Exchange: TExchange;
@@ -77,6 +78,14 @@ begin
     Clear;
     FApplyUpdate := True;
   end;
+end;
+
+procedure TCustomDepth.BeginStatistics24h;
+begin
+  TThread.CreateAnonymousThread(procedure
+    begin
+      Statistics24h;
+    end).Start
 end;
 
 procedure TCustomDepth.BeginTradeHistory;

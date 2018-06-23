@@ -66,6 +66,7 @@ begin
 
     FOldUpdateStatistics24h := aExchandeManager.OnUpdateStatistics24h;
     aExchandeManager.OnUpdateStatistics24h := DoUpdateStatistics24;
+    aExchandeManager.BeginStatistics24h;
 
     Result := ShowModal = mrOk;
 
