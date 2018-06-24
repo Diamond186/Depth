@@ -53,7 +53,8 @@ type
       procedure DoDepthManage;
 
       procedure ApplyUpdate;
-      procedure DeleteWhenLess(aList: TList<TPairDepth>; const aMinAmount: Double);
+      procedure DeleteWhenLessAmount(aList: TList<TPairDepth>; const aMinAmount: Double);
+      procedure RangeBetweenPrice(aList: TList<TPairDepth>; const aMinPrice, aMaxPrice: Double);
       function  GetTotalAmount(const aList: TList<TPairDepth>): Double;
       procedure DoTimer(Sender: TObject);
       procedure DoTradesHistoryTimer(Sender: TObject);
@@ -100,7 +101,9 @@ var
   LPairDepth: TPairDepth;
   LIndex, i: Integer;
   LFullArr: TArray<TPairDepth>;
-  LTotalBids, LTotalAsks: Double;
+  LTotalBids, LTotalAsks,
+  LMinPrice, LMaxPrice: Double;
+  LStat24H: TStatistics24h;
 begin
   if FBinance.ApplyUpdate
      and FBittrex.ApplyUpdate
@@ -135,8 +138,44 @@ begin
     FDepthAsksList.AddRange(FHitbtc.ArrDepthAsks);
     FDepthAsksList.AddRange(FBibox.ArrDepthAsks);
 
-    DeleteWhenLess(FDepthBidsList, FSettins.MinPrice);
-    DeleteWhenLess(FDepthAsksList, FSettins.MinPrice);
+    DeleteWhenLessAmount(FDepthBidsList, FSettins.MinPrice);
+    DeleteWhenLessAmount(FDepthAsksList, FSettins.MinPrice);
+
+    LMaxPrice := 0;
+    LMinPrice := 0;
+    if FSettins.RangeIsPercent then
+    begin
+      LStat24H := nil;
+
+      case FSettins.CurrentExchange of
+        TExchange.BiBox: LStat24H := FBibox.Statis24h;
+        TExchange.Binance: LStat24H := FBinance.Statis24h;
+        TExchange.Bitfinex: LStat24H := FBitfinex.Statis24h;
+        TExchange.Bitstamp: LStat24H := FBitstamp.Statis24h;
+        TExchange.Bittrex: LStat24H := FBittrex.Statis24h;
+        TExchange.HitBTC: LStat24H := FHitBTC.Statis24h;
+        TExchange.Huobi: LStat24H := FHuobi.Statis24h;
+        TExchange.Kraken: LStat24H := FKraken.Statis24h;
+        TExchange.Okex: LStat24H := FOkex.Statis24h;
+      end;
+
+      if Assigned(LStat24H) then
+      begin
+        LMinPrice := LStat24H.LastPrice - LStat24H.LastPrice * (FSettins.RangePercent / 100);
+        LMaxPrice := LStat24H.LastPrice + LStat24H.LastPrice * (FSettins.RangePercent / 100);
+      end;
+    end
+    else
+    begin
+      LMinPrice := FSettins.RangeMinPrice;
+      LMaxPrice := FSettins.RangeMaxPrice;
+    end;
+
+    if (LMaxPrice > 0) and (LMinPrice > 0) then
+    begin
+      RangeBetweenPrice(FDepthBidsList, LMinPrice, LMaxPrice);
+      RangeBetweenPrice(FDepthAsksList, LMinPrice, LMaxPrice);
+    end;
 
     FDepthBidsList.Sort(FBidsComparison);
     FDepthAsksList.Sort(FAsksComparison);
@@ -190,8 +229,8 @@ begin
   end;
 end;
 
-procedure TExchangeManager.DeleteWhenLess(aList: TList<TPairDepth>;
-                                  const aMinAmount: Double);
+procedure TExchangeManager.DeleteWhenLessAmount(aList: TList<TPairDepth>;
+                                                const aMinAmount: Double);
 var
   i: Integer;
 begin
@@ -231,6 +270,24 @@ begin
 
   for LPair in aList do
     Result := Result + LPair.Amount;
+end;
+
+procedure TExchangeManager.RangeBetweenPrice(aList: TList<TPairDepth>;
+                                             const aMinPrice, aMaxPrice: Double);
+var
+  i: Integer;
+begin
+  i := 0;
+
+  while i < aList.Count do
+  begin
+    if (aList[i].Price < aMinPrice)
+      or (aList[i].Price > aMaxPrice)
+    then
+      aList.Delete(i)
+    else
+      Inc(i);
+  end;
 end;
 
 procedure TExchangeManager.SetActive(const Value: Boolean);

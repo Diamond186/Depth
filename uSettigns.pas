@@ -33,6 +33,14 @@ type
     procedure SetUseKraken(const Value: Boolean);
     procedure SetUseOkex(const Value: Boolean);
     procedure SetCurrentExchange(const Value: TExchange);
+    function GetRangeIsPercent: Boolean;
+    function GetRangeMaxPrice: Double;
+    function GetRangeMinPrice: Double;
+    function GetRangePercent: Integer;
+    procedure SetRangeIsPercent(const Value: Boolean);
+    procedure SetRangeMaxPrice(const Value: Double);
+    procedure SetRangeMinPrice(const Value: Double);
+    procedure SetRangePercent(const Value: Integer);
 
     procedure Load(const aSectionName: string);
     procedure Save;
@@ -41,6 +49,11 @@ type
     property Pair: String read GetPair write SetPair;
     property MinPrice: Currency read GetMinPrice write SetMinPrice;
     property BoldPrice: Currency read GetBoldPrice write SetBoldPrice;
+
+    property RangeIsPercent: Boolean read GetRangeIsPercent write SetRangeIsPercent;
+    property RangePercent: Integer read GetRangePercent write SetRangePercent;
+    property RangeMinPrice: Double read GetRangeMinPrice write SetRangeMinPrice;
+    property RangeMaxPrice: Double read GetRangeMaxPrice write SetRangeMaxPrice;
 
     property UseBiBox: Boolean read GetUseBiBox write SetUseBiBox;
     property UseBinance: Boolean read GetUseBinance write SetUseBinance;
@@ -61,7 +74,7 @@ implementation
 
 uses
   System.SysUtils,
-  System.IniFiles;
+  System.IniFiles, System.StrUtils;
 
 type
   TSettigns = class(TInterfacedObject, ISettigns)
@@ -78,6 +91,11 @@ type
       FUseHuobi: Boolean;
       FUseKraken: Boolean;
       FUseOkex: Boolean;
+
+      FRangeIsPercent: Boolean;
+      FRangePercent: Integer;
+      FRangeMinPrice: Double;
+      FRangeMaxPrice: Double;
 
       FMinPrice: Currency;
       FBoldPrice: Currency;
@@ -111,6 +129,14 @@ type
       procedure SetUseOkex(const Value: Boolean);
       function  GetCurrentExchange: TExchange;
       procedure SetCurrentExchange(const Value: TExchange);
+      function GetRangeIsPercent: Boolean;
+      function GetRangeMaxPrice: Double;
+      function GetRangeMinPrice: Double;
+      function GetRangePercent: Integer;
+      procedure SetRangeIsPercent(const Value: Boolean);
+      procedure SetRangeMaxPrice(const Value: Double);
+      procedure SetRangeMinPrice(const Value: Double);
+      procedure SetRangePercent(const Value: Integer);
     public
       constructor Create;
 
@@ -121,6 +147,11 @@ type
       property Pair: String read GetPair write SetPair;
       property MinPrice: Currency read GetMinPrice write SetMinPrice;
       property BoldPrice: Currency read GetBoldPrice write SetBoldPrice;
+
+      property RangeIsPercent: Boolean read GetRangeIsPercent write SetRangeIsPercent;
+      property RangePercent: Integer read GetRangePercent write SetRangePercent;
+      property RangeMinPrice: Double read GetRangeMinPrice write SetRangeMinPrice;
+      property RangeMaxPrice: Double read GetRangeMaxPrice write SetRangeMaxPrice;
 
       property UseBiBox: Boolean read GetUseBiBox write SetUseBiBox;
       property UseBinance: Boolean read GetUseBinance write SetUseBinance;
@@ -178,6 +209,26 @@ end;
 function TSettigns.GetPair: String;
 begin
   Result := FPair;
+end;
+
+function TSettigns.GetRangeIsPercent: Boolean;
+begin
+  Result := FRangeIsPercent;
+end;
+
+function TSettigns.GetRangeMaxPrice: Double;
+begin
+  Result := FRangeMaxPrice;
+end;
+
+function TSettigns.GetRangeMinPrice: Double;
+begin
+  Result := FRangeMinPrice;
+end;
+
+function TSettigns.GetRangePercent: Integer;
+begin
+  Result := FRangePercent;
 end;
 
 function TSettigns.GetUseBiBox: Boolean;
@@ -246,6 +297,11 @@ begin
     FUseBinance := ReadBool(aSectionName, TExchange.Binance.ToString, False);
     FUseBiBox := ReadBool(aSectionName, TExchange.BiBox.ToString, False);
 
+    FRangeIsPercent := ReadBool(aSectionName, 'RangeIsPercent', True);
+    FRangePercent   := ReadInteger(aSectionName, 'RangePercent', 50);
+    FRangeMinPrice := ReadFloat(aSectionName, 'RangeMinPrice', 0);
+    FRangeMaxPrice := ReadFloat(aSectionName, 'RangeMaxPrice', 0);
+
     LExchangeName := ReadString(aSectionName, 'CurrentExchange', EmptyStr);
     if not LExchangeName.IsEmpty then
       FCurrentExchange := TExchange.ExchangeFromString(LExchangeName)
@@ -283,6 +339,11 @@ begin
     WriteBool(FSectionName, TExchange.BiBox.ToString, FUseBiBox);
     WriteString(FSectionName, 'CurrentExchange', FCurrentExchange.ToString);
 
+    WriteBool(FSectionName, 'RangeIsPercent', FRangeIsPercent);
+    WriteInteger(FSectionName, 'RangePercent', FRangePercent);
+    WriteFloat(FSectionName, 'RangeMinPrice', FRangeMinPrice);
+    WriteFloat(FSectionName, 'RangeMaxPrice', FRangeMaxPrice);
+
     UpdateFile;
   finally
     Free;
@@ -307,6 +368,26 @@ end;
 procedure TSettigns.SetPair(const Value: String);
 begin
   FPair := Value;
+end;
+
+procedure TSettigns.SetRangeIsPercent(const Value: Boolean);
+begin
+  FRangeIsPercent := Value;
+end;
+
+procedure TSettigns.SetRangeMaxPrice(const Value: Double);
+begin
+  FRangeMaxPrice := Value;
+end;
+
+procedure TSettigns.SetRangeMinPrice(const Value: Double);
+begin
+  FRangeMinPrice := Value;
+end;
+
+procedure TSettigns.SetRangePercent(const Value: Integer);
+begin
+  FRangePercent := Value;
 end;
 
 procedure TSettigns.SetUseBiBox(const Value: Boolean);

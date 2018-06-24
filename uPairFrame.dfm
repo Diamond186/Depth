@@ -2,34 +2,32 @@ object framePair: TframePair
   Left = 0
   Top = 0
   Width = 260
-  Height = 504
+  Height = 305
   Align = alRight
   TabOrder = 0
-  ExplicitHeight = 305
   object Splitter1: TSplitter
     Left = 258
     Top = 0
     Width = 2
-    Height = 504
+    Height = 305
     Cursor = crDefault
     Align = alRight
     ResizeStyle = rsLine
     ExplicitLeft = 259
+    ExplicitHeight = 504
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 258
-    Height = 504
+    Height = 305
     Align = alClient
     BevelOuter = bvNone
     Caption = 'Panel1'
     TabOrder = 0
-    ExplicitWidth = 259
-    ExplicitHeight = 305
     object Splitter: TSplitter
       Left = 0
-      Top = 320
+      Top = 121
       Width = 258
       Height = 2
       Cursor = crVSplit
@@ -41,14 +39,12 @@ object framePair: TframePair
     end
     object pDepth: TPanel
       Left = 0
-      Top = 322
+      Top = 123
       Width = 258
       Height = 182
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitTop = 123
-      ExplicitWidth = 259
       object Label3: TLabel
         Left = 0
         Top = 0
@@ -80,7 +76,6 @@ object framePair: TframePair
         Header.Font.Style = []
         Header.MainColumn = -1
         TabOrder = 0
-        ExplicitWidth = 259
         Columns = <>
       end
       object pFooterHistory: TGridPanel
@@ -113,7 +108,6 @@ object framePair: TframePair
             Value = 100.000000000000000000
           end>
         TabOrder = 1
-        ExplicitWidth = 259
         object lBidsOrders: TLabel
           Left = 0
           Top = 0
@@ -156,7 +150,7 @@ object framePair: TframePair
       Left = 0
       Top = 0
       Width = 258
-      Height = 320
+      Height = 121
       Align = alClient
       BevelOuter = bvNone
       Font.Charset = DEFAULT_CHARSET
@@ -166,16 +160,14 @@ object framePair: TframePair
       Font.Style = []
       ParentFont = False
       TabOrder = 1
-      ExplicitWidth = 259
-      ExplicitHeight = 121
       DesignSize = (
         258
-        320)
+        121)
       object vstBTC: TVirtualStringTree
         Left = 0
         Top = 57
         Width = 258
-        Height = 247
+        Height = 48
         Align = alClient
         BevelInner = bvNone
         BevelOuter = bvNone
@@ -205,8 +197,6 @@ object framePair: TframePair
         OnGetText = vstBTCGetText
         OnPaintText = vstBTCPaintText
         OnGetHint = vstBTCGetHint
-        ExplicitWidth = 259
-        ExplicitHeight = 48
         Columns = <
           item
             CaptionAlignment = taCenter
@@ -231,7 +221,6 @@ object framePair: TframePair
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 259
         object pMainHeader: TPanel
           Left = 25
           Top = 0
@@ -240,7 +229,6 @@ object framePair: TframePair
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 0
-          ExplicitWidth = 214
           object Label2: TLabel
             Left = 0
             Top = 0
@@ -272,7 +260,6 @@ object framePair: TframePair
             Font.Style = []
             ParentFont = False
             Layout = tlCenter
-            ExplicitTop = 38
             ExplicitWidth = 37
           end
           object GridPanel1: TGridPanel
@@ -305,7 +292,6 @@ object framePair: TframePair
                 Value = 100.000000000000000000
               end>
             TabOrder = 0
-            ExplicitWidth = 214
             object lExchangeName: TLabel
               Left = 0
               Top = 0
@@ -330,7 +316,7 @@ object framePair: TframePair
               Height = 17
               Align = alClient
               Alignment = taCenter
-              Caption = 'BTC - USD'
+              Caption = 'BTC - USDT'
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -16
@@ -338,8 +324,7 @@ object framePair: TframePair
               Font.Style = []
               ParentFont = False
               Layout = tlCenter
-              ExplicitLeft = 107
-              ExplicitWidth = 70
+              ExplicitWidth = 77
               ExplicitHeight = 21
             end
           end
@@ -352,7 +337,6 @@ object framePair: TframePair
           Align = alRight
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitLeft = 239
           object iClose: TImage
             Left = 0
             Top = 0
@@ -580,14 +564,12 @@ object framePair: TframePair
       end
       object pFooter: TPanel
         Left = 0
-        Top = 304
+        Top = 105
         Width = 258
         Height = 16
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 2
-        ExplicitTop = 105
-        ExplicitWidth = 259
         object gpTotal: TGridPanel
           Left = 0
           Top = 0
@@ -621,7 +603,6 @@ object framePair: TframePair
               SizeStyle = ssAuto
             end>
           TabOrder = 0
-          ExplicitWidth = 259
           object lTotalBids: TLabel
             Left = 0
             Top = 0
@@ -675,7 +656,6 @@ object framePair: TframePair
         Visible = False
         OnClick = listPricingExchangeClick
         OnExit = listPricingExchangeExit
-        ExplicitLeft = 138
       end
     end
   end

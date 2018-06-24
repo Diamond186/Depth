@@ -12,29 +12,48 @@ type
     pFooter: TPanel;
     bCancel: TButton;
     bSave: TButton;
-    cbPairs: TComboBox;
-    eSearchPair: TEdit;
+    cbPair1: TComboBox;
+    eSearchPair1: TEdit;
     eMinAmount: TEdit;
     eBoldAmount: TEdit;
     pMain: TPanel;
     vstExchanges: TVirtualStringTree;
+    Label1: TLabel;
+    Label2: TLabel;
+    GroupBox1: TGroupBox;
+    Label3: TLabel;
+    cbPair2: TComboBox;
+    eSearchPair2: TEdit;
+    GroupBox2: TGroupBox;
+    rbPercent: TRadioButton;
+    rbAmount: TRadioButton;
+    cbPercents: TComboBox;
+    eMinRange: TEdit;
+    eMaxRange: TEdit;
     procedure vstExchangesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstExchangesInitNode(Sender: TBaseVirtualTree; ParentNode,
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstExchangesChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure rbRangeClick(Sender: TObject);
   private
     FExchangeManager: TExchangeManager;
     FOldUpdateStatistics24h: TOnUpdateStatistics24h;
 
     procedure DoUpdateStatistics24;
+
+    procedure LoadSettings;
+    procedure SaveSettings;
   public
-    class function ShowSettings(const aExchandeManager: TExchangeManager): Boolean;
+    class function ShowSettings(const aExchangeManager: TExchangeManager): Boolean;
   end;
 
 implementation
 
 {$R *.dfm}
+
+uses
+  System.StrUtils;
 
 { TfrmSettings }
 
@@ -46,60 +65,86 @@ begin
   vstExchanges.Refresh;
 end;
 
-class function TfrmSettings.ShowSettings(const aExchandeManager: TExchangeManager): Boolean;
+procedure TfrmSettings.LoadSettings;
+begin
+  eMinAmount.Text := FloatToStr(FExchangeManager.Settings.MinPrice);
+  eBoldAmount.Text := FloatToStr(FExchangeManager.Settings.BoldPrice);
+  cbPair1.Text := FExchangeManager.Settings.Pair;
+  rbPercent.Checked := FExchangeManager.Settings.RangeIsPercent;
+  cbPercents.ItemIndex := cbPercents.Items.IndexOf(FExchangeManager.Settings.RangePercent.ToString + ' %');
+  eMinRange.Text := FExchangeManager.Settings.RangeMinPrice.ToString;
+  eMaxRange.Text := FExchangeManager.Settings.RangeMaxPrice.ToString;
+end;
+
+procedure TfrmSettings.rbRangeClick(Sender: TObject);
+begin
+  eMinRange.Enabled := rbAmount.Checked;
+  eMaxRange.Enabled := rbAmount.Checked;
+  cbPercents.Enabled := rbPercent.Checked;
+end;
+
+procedure TfrmSettings.SaveSettings;
 var
   LNode: PVirtualNode;
   LUseExchange: Boolean;
 begin
+  FExchangeManager.Settings.BoldPrice := StrToFloat(eBoldAmount.Text);
+  FExchangeManager.Settings.MinPrice := StrToFloat(eMinAmount.Text);
+
+  FExchangeManager.Settings.RangeIsPercent := rbPercent.Checked;
+  FExchangeManager.Settings.RangePercent := cbPercents.Items[cbPercents.ItemIndex]
+                                                      .Replace(' %', '')
+                                                      .ToInteger;
+  FExchangeManager.Settings.RangeMinPrice := StrToFloat(eMinRange.Text);
+  FExchangeManager.Settings.RangeMaxPrice := StrToFloat(eMaxRange.Text);
+
+  LNode := vstExchanges.GetFirst;
+  while Assigned(LNode) do
+  begin
+    LUseExchange := LNode^.CheckState = csCheckedNormal;
+
+    case TExchange(LNode^.Index) of
+      BiBox: FExchangeManager.Settings.UseBiBox := LUseExchange;
+      Binance: FExchangeManager.Settings.UseBinance := LUseExchange;
+      Bitfinex: FExchangeManager.Settings.UseBitfinex := LUseExchange;
+      Bitstamp: FExchangeManager.Settings.UseBitstamp := LUseExchange;
+      Bittrex: FExchangeManager.Settings.UseBittrex := LUseExchange;
+      HitBTC: FExchangeManager.Settings.UseHitBTC := LUseExchange;
+      Huobi: FExchangeManager.Settings.UseHuobi := LUseExchange;
+      Kraken: FExchangeManager.Settings.UseKraken := LUseExchange;
+      Okex: FExchangeManager.Settings.UseOkex := LUseExchange;
+//          Poloniex: LUseExchange := False;
+    end;
+
+    LNode := LNode.NextSibling;
+  end;
+
+  FExchangeManager.Settings.Save;
+end;
+
+class function TfrmSettings.ShowSettings(const aExchangeManager: TExchangeManager): Boolean;
+begin
   Result := False;
 
-  if Assigned(aExchandeManager) then
+  if Assigned(aExchangeManager) then
   with TfrmSettings.Create(nil) do
   try
-    FExchangeManager := aExchandeManager;
+    FExchangeManager := aExchangeManager;
     vstExchanges.RootNodeCount := TExchange.Count;
     vstExchanges.ReinitNode(nil, True);
 
-    eMinAmount.Text := FloatToStr(aExchandeManager.Settings.MinPrice);
-    eBoldAmount.Text := FloatToStr(aExchandeManager.Settings.BoldPrice);
-    cbPairs.Text := aExchandeManager.Settings.Pair;
+    LoadSettings;
 
-    FOldUpdateStatistics24h := aExchandeManager.OnUpdateStatistics24h;
-    aExchandeManager.OnUpdateStatistics24h := DoUpdateStatistics24;
-    aExchandeManager.BeginStatistics24h;
+    FOldUpdateStatistics24h := aExchangeManager.OnUpdateStatistics24h;
+    aExchangeManager.OnUpdateStatistics24h := DoUpdateStatistics24;
+    aExchangeManager.BeginStatistics24h;
 
     Result := ShowModal = mrOk;
 
     if Result then
-    begin
-      aExchandeManager.Settings.BoldPrice := StrToFloat(eBoldAmount.Text);
-      aExchandeManager.Settings.MinPrice := StrToFloat(eMinAmount.Text);
-
-      LNode := vstExchanges.GetFirst;
-      while Assigned(LNode) do
-      begin
-        LUseExchange := LNode^.CheckState = csCheckedNormal;
-
-        case TExchange(LNode^.Index) of
-          BiBox: aExchandeManager.Settings.UseBiBox := LUseExchange;
-          Binance: aExchandeManager.Settings.UseBinance := LUseExchange;
-          Bitfinex: aExchandeManager.Settings.UseBitfinex := LUseExchange;
-          Bitstamp: aExchandeManager.Settings.UseBitstamp := LUseExchange;
-          Bittrex: aExchandeManager.Settings.UseBittrex := LUseExchange;
-          HitBTC: aExchandeManager.Settings.UseHitBTC := LUseExchange;
-          Huobi: aExchandeManager.Settings.UseHuobi := LUseExchange;
-          Kraken: aExchandeManager.Settings.UseKraken := LUseExchange;
-          Okex: aExchandeManager.Settings.UseOkex := LUseExchange;
-//          Poloniex: LUseExchange := False;
-        end;
-
-        LNode := LNode.NextSibling;
-      end;
-
-      aExchandeManager.Settings.Save;
-    end;
+      SaveSettings;
   finally
-    aExchandeManager.OnUpdateStatistics24h := FOldUpdateStatistics24h;
+    aExchangeManager.OnUpdateStatistics24h := FOldUpdateStatistics24h;
 
     Free;
   end;
@@ -108,10 +153,7 @@ end;
 procedure TfrmSettings.vstExchangesChecked(Sender: TBaseVirtualTree;
                                            Node: PVirtualNode);
 begin
-  if Node^.CheckState = csCheckedNormal then
-    Caption := 'True'
-  else
-    Caption := 'False';
+  Caption := IfThen(Node^.CheckState = csCheckedNormal, 'True', 'False');
 end;
 
 procedure TfrmSettings.vstExchangesGetText(Sender: TBaseVirtualTree;
