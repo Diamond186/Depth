@@ -12,8 +12,7 @@ type
       const
         cDepthURL = 'https://api.binance.com/api/v1/depth?symbol=BTCUSDT&limit=1000';
         c24hURL = 'https://api.binance.com/api/v1/ticker/24hr?symbol=BTCUSDT';
-        cTradesHistoryURL = 'https://api.binance.com/api/v1/trades?symbol=BTCUSDT&limit=100';
-
+        cTradesHistoryURL = 'https://api.binance.com/api/v1/trades?symbol=BTCUSDT&limit=300';
 
       procedure ParseResponseDepth(const aResponse: string);
       procedure ParseResponse24h(const aResponse: string);
@@ -143,16 +142,22 @@ procedure TDepthBinance.ParseResponseTradesHistory(const aResponse: string);
 var
   LJSON: TJSONValue;
   LArr: TJSONArray;
-  i, LTime: Integer;
+  i: Integer;
+  LTime: Int64;
   LAmount: Double;
   LIsBuyerMaker: Boolean;
+  LSumBidsTrades,
+  LSumAsksTrades: Double;
+  LCountBidsTrades,
+  LCountAsksTrades: Integer;
 begin
   if not aResponse.IsEmpty then
   begin
-    FSumBidsTrades := 0;
-    FSumAsksTrades := 0;
-    FTradesList.Clear;
-
+    LSumBidsTrades := 0;
+    LSumAsksTrades := 0;
+    LCountBidsTrades := 0;
+    LCountAsksTrades := 0;
+   
     LJSON := TJSONObject.ParseJSONValue(aResponse);
     try
       LArr := LJSON.GetValue<TJSONArray>;
@@ -164,21 +169,32 @@ begin
 
         for i := LArr.Count - 1 downto 0 do
         begin
-          LTime := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
+          LTime := LArr.Items[i].GetValue<Int64>('time');
 
-          if LTime > FLastTradeHistoryTime - cIntervalTradeHistory then
+          if LTime > FLastTradeHistoryTime then
           begin
-            LAmount := LArr.Items[LArr.Count - 1].GetValue<string>('qty').ToDouble;
-            LIsBuyerMaker := LArr.Items[LArr.Count - 1].GetValue<Boolean>('isBuyerMaker');
+            LAmount := LArr.Items[i].GetValue<string>('qty').ToDouble;
+            LIsBuyerMaker := LArr.Items[i].GetValue<Boolean>('isBuyerMaker');
 
             if LIsBuyerMaker then
-              FSumBidsTrades := FSumBidsTrades + LAmount
+            begin
+              LSumAsksTrades := LSumAsksTrades + LAmount;
+              Inc(LCountAsksTrades);
+            end
             else
-              FSumAsksTrades := FSumAsksTrades + LAmount;
-
-            FTradesList.Add(TTrade.Create(LAmount, LIsBuyerMaker));
-          end;
+            begin
+              LSumBidsTrades := LSumBidsTrades + LAmount;
+              Inc(LCountBidsTrades);
+            end;
+          end
+          else
+            Break;
         end;
+
+        FLastTradeHistoryTime := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
+
+        FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
+        FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
       end;
     finally
       FreeAndNil(LJSON);
@@ -186,6 +202,8 @@ begin
   end;
 
   Self.TradeHistoryApplyUpdate := True;
+
+//  if Assigned(F)
 end;
 
 procedure TDepthBinance.Statistics24h;
@@ -193,17 +211,34 @@ begin
   inherited;
 
   try
-    ParseResponse24h(FIdHTTP.Get(c24hURL));
+    ParseResponse24h(FIdHTTP_Statistics24h.Get(c24hURL));
   except
     // ignore error
   end;
 end;
 
 procedure TDepthBinance.TradesHistory;
+var
+  LRes: string;
 begin
   inherited;
 
-  ParseResponseTradesHistory(FIdHTTP.Get(cTradesHistoryURL));
+  try
+    LRes := FIdHTTP_TradesHistory.Get(cTradesHistoryURL);
+  except
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      Self.TradeHistoryApplyUpdate := True;
+    end;
+  end;
+
+  ParseResponseTradesHistory(LRes);
+
+  if Assigned(FTradeHistoryProc)
+    and (TradeHistoryApplyUpdate or LRes.IsEmpty)
+  then
+    FTradeHistoryProc;
 end;
 
 constructor TDepthBinance.Create;
@@ -220,7 +255,7 @@ begin
   inherited;
 
   try
-    LRes := FIdHTTP.Get(cDepthURL);
+    LRes := FIdHTTP_Depth.Get(cDepthURL);
   except
     on E: Exception do
     begin
@@ -236,7 +271,7 @@ begin
   if Assigned(FDepthManage)
     and (ApplyUpdate or LRes.IsEmpty)
   then
-      FDepthManage;
+    FDepthManage;
 end;
 
 end.

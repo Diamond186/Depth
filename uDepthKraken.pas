@@ -123,7 +123,7 @@ begin
   inherited;
 
   try
-    ParseResponse24h(FIdHTTP.Get(c24hURL));
+    ParseResponse24h(FIdHTTP_Statistics24h.Get(c24hURL));
   except
     // ignore error
   end;
@@ -149,7 +149,7 @@ begin
   inherited;
 
   try
-    LRes := FIdHTTP.Get(depthURL);
+    LRes := FIdHTTP_Depth.Get(depthURL);
   except
     on E: Exception do
     begin

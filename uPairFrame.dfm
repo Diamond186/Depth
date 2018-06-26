@@ -1,15 +1,15 @@
 object framePair: TframePair
   Left = 0
   Top = 0
-  Width = 260
-  Height = 305
+  Width = 300
+  Height = 475
   Align = alRight
   TabOrder = 0
   object Splitter1: TSplitter
-    Left = 258
+    Left = 298
     Top = 0
     Width = 2
-    Height = 305
+    Height = 475
     Cursor = crDefault
     Align = alRight
     ResizeStyle = rsLine
@@ -19,36 +19,26 @@ object framePair: TframePair
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 258
-    Height = 305
+    Width = 298
+    Height = 475
     Align = alClient
     BevelOuter = bvNone
     Caption = 'Panel1'
     TabOrder = 0
-    object Splitter: TSplitter
-      Left = 0
-      Top = 121
-      Width = 258
-      Height = 2
-      Cursor = crVSplit
-      Align = alBottom
-      Color = clBtnShadow
-      ParentColor = False
-      ExplicitTop = 322
-      ExplicitWidth = 251
-    end
+    ExplicitWidth = 258
+    ExplicitHeight = 305
     object pDepth: TPanel
       Left = 0
-      Top = 123
-      Width = 258
-      Height = 182
+      Top = 324
+      Width = 298
+      Height = 151
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 0
       object Label3: TLabel
         Left = 0
         Top = 0
-        Width = 258
+        Width = 298
         Height = 17
         Align = alTop
         Alignment = taCenter
@@ -61,11 +51,11 @@ object framePair: TframePair
         ParentFont = False
         ExplicitWidth = 78
       end
-      object VirtualStringTree1: TVirtualStringTree
+      object vstTradeHistory: TVirtualStringTree
         Left = 0
         Top = 17
-        Width = 258
-        Height = 140
+        Width = 298
+        Height = 109
         Align = alClient
         BorderStyle = bsNone
         Header.AutoSizeIndex = 0
@@ -74,14 +64,34 @@ object framePair: TframePair
         Header.Font.Height = -11
         Header.Font.Name = 'Tahoma'
         Header.Font.Style = []
-        Header.MainColumn = -1
+        RootNodeCount = 6
+        ScrollBarOptions.ScrollBars = ssNone
         TabOrder = 0
-        Columns = <>
+        TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowTreeLines, toThemeAware, toUseBlendedImages]
+        OnGetText = vstTradeHistoryGetText
+        Columns = <
+          item
+            Alignment = taCenter
+            Position = 0
+            Width = 124
+            WideText = 'Bids'
+          end
+          item
+            Alignment = taCenter
+            Position = 1
+            WideText = 'Info'
+          end
+          item
+            Alignment = taCenter
+            Position = 2
+            Width = 124
+            WideText = 'Asks'
+          end>
       end
       object pFooterHistory: TGridPanel
         Left = 0
-        Top = 157
-        Width = 258
+        Top = 126
+        Width = 298
         Height = 25
         Align = alBottom
         BevelOuter = bvNone
@@ -108,14 +118,16 @@ object framePair: TframePair
             Value = 100.000000000000000000
           end>
         TabOrder = 1
+        ExplicitTop = 157
+        ExplicitWidth = 258
         object lBidsOrders: TLabel
           Left = 0
           Top = 0
-          Width = 129
+          Width = 149
           Height = 25
           Align = alClient
           Alignment = taCenter
-          Caption = 'lBidsOrders'
+          Caption = '0 (0 BTC)'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -13
@@ -123,17 +135,17 @@ object framePair: TframePair
           Font.Style = []
           ParentFont = False
           Layout = tlCenter
-          ExplicitWidth = 68
+          ExplicitWidth = 50
           ExplicitHeight = 17
         end
         object lAsksOrders: TLabel
-          Left = 129
+          Left = 149
           Top = 0
-          Width = 129
+          Width = 149
           Height = 25
           Align = alClient
           Alignment = taCenter
-          Caption = 'lAsksOrders'
+          Caption = '0 (0 BTC)'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -13
@@ -141,7 +153,8 @@ object framePair: TframePair
           Font.Style = []
           ParentFont = False
           Layout = tlCenter
-          ExplicitWidth = 70
+          ExplicitLeft = 129
+          ExplicitWidth = 50
           ExplicitHeight = 17
         end
       end
@@ -149,8 +162,8 @@ object framePair: TframePair
     object pMain: TPanel
       Left = 0
       Top = 0
-      Width = 258
-      Height = 121
+      Width = 298
+      Height = 324
       Align = alClient
       BevelOuter = bvNone
       Font.Charset = DEFAULT_CHARSET
@@ -160,14 +173,16 @@ object framePair: TframePair
       Font.Style = []
       ParentFont = False
       TabOrder = 1
+      ExplicitWidth = 258
+      ExplicitHeight = 121
       DesignSize = (
-        258
-        121)
+        298
+        324)
       object vstBTC: TVirtualStringTree
         Left = 0
         Top = 57
-        Width = 258
-        Height = 48
+        Width = 298
+        Height = 251
         Align = alClient
         BevelInner = bvNone
         BevelOuter = bvNone
@@ -197,42 +212,45 @@ object framePair: TframePair
         OnGetText = vstBTCGetText
         OnPaintText = vstBTCPaintText
         OnGetHint = vstBTCGetHint
+        ExplicitHeight = 242
         Columns = <
           item
             CaptionAlignment = taCenter
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment]
             Position = 0
-            Width = 133
+            Width = 159
             WideText = 'Bids'
           end
           item
             CaptionAlignment = taCenter
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment]
             Position = 1
-            Width = 125
+            Width = 139
             WideText = 'Asks'
           end>
       end
       object pHeader: TPanel
         Left = 0
         Top = 0
-        Width = 258
+        Width = 298
         Height = 57
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitWidth = 258
         object pMainHeader: TPanel
           Left = 25
           Top = 0
-          Width = 213
+          Width = 253
           Height = 57
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 0
+          ExplicitWidth = 213
           object Label2: TLabel
             Left = 0
             Top = 0
-            Width = 213
+            Width = 253
             Height = 17
             Align = alTop
             Alignment = taCenter
@@ -248,7 +266,7 @@ object framePair: TframePair
           object lPrice: TLabel
             Left = 0
             Top = 34
-            Width = 213
+            Width = 253
             Height = 23
             Align = alBottom
             Alignment = taCenter
@@ -265,7 +283,7 @@ object framePair: TframePair
           object GridPanel1: TGridPanel
             Left = 0
             Top = 17
-            Width = 213
+            Width = 253
             Height = 17
             Align = alClient
             BevelOuter = bvNone
@@ -292,14 +310,15 @@ object framePair: TframePair
                 Value = 100.000000000000000000
               end>
             TabOrder = 0
+            ExplicitWidth = 213
             object lExchangeName: TLabel
               Left = 0
               Top = 0
-              Width = 106
+              Width = 126
               Height = 17
               Align = alClient
               Alignment = taCenter
-              Caption = 'lExchangeName'
+              Caption = 'Exchange'
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -13
@@ -307,12 +326,12 @@ object framePair: TframePair
               Font.Style = []
               ParentFont = False
               Layout = tlCenter
-              ExplicitWidth = 93
+              ExplicitWidth = 55
             end
             object Label1: TLabel
-              Left = 106
+              Left = 126
               Top = 0
-              Width = 107
+              Width = 127
               Height = 17
               Align = alClient
               Alignment = taCenter
@@ -324,19 +343,21 @@ object framePair: TframePair
               Font.Style = []
               ParentFont = False
               Layout = tlCenter
+              ExplicitLeft = 106
               ExplicitWidth = 77
               ExplicitHeight = 21
             end
           end
         end
         object pRightHeader: TPanel
-          Left = 238
+          Left = 278
           Top = 0
           Width = 20
           Height = 57
           Align = alRight
           BevelOuter = bvNone
           TabOrder = 1
+          ExplicitLeft = 238
           object iClose: TImage
             Left = 0
             Top = 0
@@ -564,16 +585,18 @@ object framePair: TframePair
       end
       object pFooter: TPanel
         Left = 0
-        Top = 105
-        Width = 258
+        Top = 308
+        Width = 298
         Height = 16
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 2
+        ExplicitTop = 105
+        ExplicitWidth = 258
         object gpTotal: TGridPanel
           Left = 0
           Top = 0
-          Width = 258
+          Width = 298
           Height = 16
           Align = alTop
           BevelOuter = bvNone
@@ -603,44 +626,46 @@ object framePair: TframePair
               SizeStyle = ssAuto
             end>
           TabOrder = 0
+          ExplicitWidth = 258
           object lTotalBids: TLabel
             Left = 0
             Top = 0
-            Width = 129
+            Width = 149
             Height = 16
             Align = alClient
             Alignment = taCenter
-            Caption = 'lTotalBids'
+            Caption = '0'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -13
             Font.Name = 'Segoe UI'
             Font.Style = []
             ParentFont = False
-            ExplicitWidth = 55
+            ExplicitWidth = 7
             ExplicitHeight = 17
           end
           object lTotalAsks: TLabel
-            Left = 129
+            Left = 149
             Top = 0
-            Width = 129
+            Width = 149
             Height = 16
             Align = alClient
             Alignment = taCenter
-            Caption = 'lTotalAsks'
+            Caption = '0'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -13
             Font.Name = 'Segoe UI'
             Font.Style = []
             ParentFont = False
-            ExplicitWidth = 57
+            ExplicitLeft = 129
+            ExplicitWidth = 7
             ExplicitHeight = 17
           end
         end
       end
       object listPricingExchange: TListBox
-        Left = 137
+        Left = 177
         Top = 57
         Width = 121
         Height = 97
@@ -656,6 +681,7 @@ object framePair: TframePair
         Visible = False
         OnClick = listPricingExchangeClick
         OnExit = listPricingExchangeExit
+        ExplicitLeft = 137
       end
     end
   end

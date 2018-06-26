@@ -32,8 +32,7 @@ type
     pRightHeader: TPanel;
     pLeftHeader: TPanel;
     pDepth: TPanel;
-    Splitter: TSplitter;
-    VirtualStringTree1: TVirtualStringTree;
+    vstTradeHistory: TVirtualStringTree;
     pFooterHistory: TGridPanel;
     lBidsOrders: TLabel;
     lAsksOrders: TLabel;
@@ -59,6 +58,9 @@ type
     procedure listPricingExchangeClick(Sender: TObject);
     procedure iPriceExchangeClick(Sender: TObject);
     procedure listPricingExchangeExit(Sender: TObject);
+    procedure vstTradeHistoryGetText(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: string);
   private
     FExchangeManager: TExchangeManager;
 
@@ -66,9 +68,12 @@ type
     FDepthAsksList: TList<TPairDepth>;
     FSettins: ISettigns;
     FCurrentExchange: TCustomDepth;
+    FBidsTradeHistory,
+    FAsksTradeHistory: TTradeHistoryTotal;
 
     procedure DoUpdateStatistics24h;
     procedure DoUpdateDepth(const aBidsList, aAsksList: TList<TPairDepth>; const aTotalBids, aTotalAsks: Double);
+    procedure DoUpdateTradeHistory;
     function  GetActive: Boolean;
     procedure SetActive(const Value: Boolean);
   public
@@ -109,27 +114,30 @@ begin
     FDepthBidsList := TList<TPairDepth>.Create;
     FDepthAsksList := TList<TPairDepth>.Create;
 
+    FBidsTradeHistory := TTradeHistoryTotal.Create;
+    FAsksTradeHistory := TTradeHistoryTotal.Create;
+
     FormatSettings.DecimalSeparator := '.';
     FExchangeManager := TExchangeManager.Create(FSettins);
 
     FExchangeManager.OnUpdateDepth := DoUpdateDepth;
     FExchangeManager.OnUpdateStatistics24h := DoUpdateStatistics24h;
-    FExchangeManager.OnUpdateTradeHistory :=
-      procedure
-      begin
-
-      end;
+    FExchangeManager.OnUpdateTradeHistory := DoUpdateTradeHistory;
 
     if not aSectionName.IsEmpty then
     begin
       FCurrentExchange := FExchangeManager.GetDepthFromExchange(FSettins.CurrentExchange);
       FExchangeManager.Active := True;
     end;
+
+    vstTradeHistory.RootNodeCount := 6;
   end;
 end;
 
 destructor TframePair.Destroy;
 begin
+  FreeAndNil(FAsksTradeHistory);
+  FreeAndNil(FBidsTradeHistory);
   FreeAndNil(FExchangeManager);
   FreeAndNil(FDepthBidsList);
   FreeAndNil(FDepthAsksList);
@@ -313,6 +321,46 @@ begin
   end;
 end;
 
+procedure TframePair.DoUpdateTradeHistory;
+begin
+  lBidsOrders.Caption := FExchangeManager.BidsTradeHistory.OneSec.Count.ToString + ' (' +
+                         Format('%n', [FExchangeManager.BidsTradeHistory.OneSec.Amount]) + ' BTC)';
+
+  lAsksOrders.Caption := FExchangeManager.AsksTradeHistory.OneSec.Count.ToString + ' (' +
+                         Format('%n', [FExchangeManager.AsksTradeHistory.OneSec.Amount]) + ' BTC)';
+
+  vstTradeHistory.BeginUpdate;
+  try
+    FAsksTradeHistory._15Sec.Count := FExchangeManager.AsksTradeHistory._15Sec.Count;
+    FAsksTradeHistory._15Sec.Amount := FExchangeManager.AsksTradeHistory._15Sec.Amount;
+    FAsksTradeHistory._30Sec.Count := FExchangeManager.AsksTradeHistory._30Sec.Count;
+    FAsksTradeHistory._30Sec.Amount := FExchangeManager.AsksTradeHistory._30Sec.Amount;
+    FAsksTradeHistory._1Min.Count := FExchangeManager.AsksTradeHistory._1Min.Count;
+    FAsksTradeHistory._1Min.Amount := FExchangeManager.AsksTradeHistory._1Min.Amount;
+    FAsksTradeHistory._15Min.Count := FExchangeManager.AsksTradeHistory._15Min.Count;
+    FAsksTradeHistory._15Min.Amount := FExchangeManager.AsksTradeHistory._15Min.Amount;
+    FAsksTradeHistory._30Min.Count := FExchangeManager.AsksTradeHistory._30Min.Count;
+    FAsksTradeHistory._30Min.Amount := FExchangeManager.AsksTradeHistory._30Min.Amount;
+    FAsksTradeHistory._1Hour.Count := FExchangeManager.AsksTradeHistory._1Hour.Count;
+    FAsksTradeHistory._1Hour.Amount := FExchangeManager.AsksTradeHistory._1Hour.Amount;
+
+    FBidsTradeHistory._15Sec.Count := FExchangeManager.BidsTradeHistory._15Sec.Count;
+    FBidsTradeHistory._15Sec.Amount := FExchangeManager.BidsTradeHistory._15Sec.Amount;
+    FBidsTradeHistory._30Sec.Count := FExchangeManager.BidsTradeHistory._30Sec.Count;
+    FBidsTradeHistory._30Sec.Amount := FExchangeManager.BidsTradeHistory._30Sec.Amount;
+    FBidsTradeHistory._1Min.Count := FExchangeManager.BidsTradeHistory._1Min.Count;
+    FBidsTradeHistory._1Min.Amount := FExchangeManager.BidsTradeHistory._1Min.Amount;
+    FBidsTradeHistory._15Min.Count := FExchangeManager.BidsTradeHistory._15Min.Count;
+    FBidsTradeHistory._15Min.Amount := FExchangeManager.BidsTradeHistory._15Min.Amount;
+    FBidsTradeHistory._30Min.Count := FExchangeManager.BidsTradeHistory._30Min.Count;
+    FBidsTradeHistory._30Min.Amount := FExchangeManager.BidsTradeHistory._30Min.Amount;
+    FBidsTradeHistory._1Hour.Count := FExchangeManager.BidsTradeHistory._1Hour.Count;
+    FBidsTradeHistory._1Hour.Amount := FExchangeManager.BidsTradeHistory._1Hour.Amount;
+  finally
+    vstTradeHistory.EndUpdate;
+  end;
+end;
+
 function TframePair.GetActive: Boolean;
 begin
   Result := FExchangeManager.Active;
@@ -428,6 +476,79 @@ begin
     and (LPair.Amount >= FSettins.BoldPrice)
   then
     TargetCanvas.Font.Style := TargetCanvas.Font.Style + [fsBold];
+end;
+
+procedure TframePair.vstTradeHistoryGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: string);
+const
+  c15Sec = 0;
+  c30Sec = 1;
+  c1Min = 2;
+  c15Min = 3;
+  c30Min = 4;
+  c1Hour = 5;
+var
+  LCount: Integer;
+  LAmount: Double;
+begin
+  if Column = 1 then
+  begin
+    case Node.Index of
+      c15Sec: CellText := '15 Sec';
+      c30Sec: CellText := '30 Sec';
+      c1Min: CellText := '1 Min';
+      c15Min: CellText := '15 Min';
+      c30Min: CellText := '30 Min';
+      c1Hour: CellText := '1 Hour';
+    end;
+
+    Exit;
+  end;
+
+  LCount := 0;
+  LAmount := 0;
+
+  if Column in [0, 2] then
+  case Node.Index of
+    c15Sec:
+      begin
+        LCount := IfThen(Column = 0, FBidsTradeHistory._15Sec.Count, FAsksTradeHistory._15Sec.Count);
+        LAmount := IfThen(Column = 0, FBidsTradeHistory._15Sec.Amount, FAsksTradeHistory._15Sec.Amount);
+      end;
+
+    c30Sec:
+      begin
+        LCount := IfThen(Column = 0, FBidsTradeHistory._30Sec.Count, FAsksTradeHistory._30Sec.Count);
+        LAmount := IfThen(Column = 0, FBidsTradeHistory._30Sec.Amount, FAsksTradeHistory._30Sec.Amount);
+      end;
+
+    c1Min:
+      begin
+        LCount := IfThen(Column = 0, FBidsTradeHistory._1Min.Count, FAsksTradeHistory._1Min.Count);
+        LAmount := IfThen(Column = 0, FBidsTradeHistory._1Min.Amount, FAsksTradeHistory._1Min.Amount);
+      end;
+
+    c15Min:
+      begin
+        LCount := IfThen(Column = 0, FBidsTradeHistory._15Min.Count, FAsksTradeHistory._15Min.Count);
+        LAmount := IfThen(Column = 0, FBidsTradeHistory._15Min.Amount, FAsksTradeHistory._15Min.Amount);
+      end;
+
+    c30Min:
+      begin
+        LCount := IfThen(Column = 0, FBidsTradeHistory._30Min.Count, FAsksTradeHistory._30Min.Count);
+        LAmount := IfThen(Column = 0, FBidsTradeHistory._30Min.Amount, FAsksTradeHistory._30Min.Amount);
+      end;
+
+    c1Hour:
+      begin
+        LCount := IfThen(Column = 0, FBidsTradeHistory._1Hour.Count, FAsksTradeHistory._1Hour.Count);
+        LAmount := IfThen(Column = 0, FBidsTradeHistory._1Hour.Amount, FAsksTradeHistory._1Hour.Amount);
+      end;
+  end;
+
+  CellText := Format('%d', [LCount]) + ' (' + Format('%n', [LAmount]) + ' BTC)';
 end;
 
 end.

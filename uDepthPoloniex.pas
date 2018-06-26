@@ -104,7 +104,7 @@ begin
   inherited;
 
   try
-    LRes := FIdHTTP.Get(depthPoloniex);
+    LRes := FIdHTTP_Depth.Get(depthPoloniex);
   except
     on E: Exception do
     begin

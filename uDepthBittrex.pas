@@ -118,7 +118,7 @@ begin
   inherited;
 
   try
-    ParseResponseStatis24h(FIdHTTP.Get(StatisURL));
+    ParseResponseStatis24h(FIdHTTP_Statistics24h.Get(StatisURL));
   except
     // ignore error
   end;
@@ -144,7 +144,7 @@ begin
   inherited;
 
   try
-    LRes := FIdHTTP.Get(depthBittrex);
+    LRes := FIdHTTP_Depth.Get(depthBittrex);
   except
     on E: Exception do
     begin
