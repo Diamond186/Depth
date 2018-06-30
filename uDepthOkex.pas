@@ -12,9 +12,11 @@ type
       const
         depthURL = 'https://www.okex.com/api/v1/depth.do?symbol=btc_usdt';
         c24hURL = 'https://www.okex.com/api/v1/ticker.do?symbol=btc_usdt';
+        cTradesHistoryURL = 'https://www.okex.com/api/v1/trades.do?symbol=btc_usdt';
 
       procedure ParseResponse(const aResponse: string);
       procedure ParseResponse24h(const aResponse: string);
+      procedure ParseResponseTradesHistory(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -114,6 +116,71 @@ begin
   end;
 end;
 
+procedure TDepthOkex.ParseResponseTradesHistory(const aResponse: string);
+var
+  LJSON: TJSONValue;
+  LArr: TJSONArray;
+  i: Integer;
+  LTime: Int64;
+  LAmount: Double;
+  LIsBuyerMaker: Boolean;
+  LSumBidsTrades,
+  LSumAsksTrades: Double;
+  LCountBidsTrades,
+  LCountAsksTrades: Integer;
+begin
+  LSumBidsTrades := 0;
+  LSumAsksTrades := 0;
+  LCountBidsTrades := 0;
+  LCountAsksTrades := 0;
+
+  if not aResponse.IsEmpty then
+  begin
+
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LArr := LJSON.GetValue<TJSONArray>;
+
+      if LArr.Count > 0 then
+      begin
+        if FLastTimestamp = 0 then
+          FLastTimestamp := LArr.Items[LArr.Count - 1].GetValue<Int64>('tid');
+
+        for i := LArr.Count - 1 downto 0 do
+        begin
+          LTime := LArr.Items[i].GetValue<Int64>('tid');
+
+          if LTime > FLastTimestamp then
+          begin
+            LAmount := LArr.Items[i].GetValue<string>('amount').ToDouble;
+            LIsBuyerMaker := LArr.Items[i].GetValue<string>('type') = 'sell';
+
+            if LIsBuyerMaker then
+            begin
+              LSumAsksTrades := LSumAsksTrades + LAmount;
+              Inc(LCountAsksTrades);
+            end
+            else
+            begin
+              LSumBidsTrades := LSumBidsTrades + LAmount;
+              Inc(LCountBidsTrades);
+            end;
+          end;
+        end;
+
+        FLastTimestamp := LArr.Items[LArr.Count - 1].GetValue<Int64>('tid');
+      end;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+
+  FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
+  FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
+
+  Self.TradeHistoryApplyUpdate := True;
+end;
+
 procedure TDepthOkex.Statistics24h;
 begin
   inherited;
@@ -126,9 +193,30 @@ begin
 end;
 
 procedure TDepthOkex.TradesHistory;
+var
+  LRes: string;
 begin
   inherited;
 
+  try
+    if FLastTimestamp = 0 then
+      LRes := FIdHTTP_TradesHistory.Get(cTradesHistoryURL)
+    else
+      LRes := FIdHTTP_TradesHistory.Get(cTradesHistoryURL + '&since=' + FLastTimestamp.ToString);
+  except
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      Self.TradeHistoryApplyUpdate := True;
+    end;
+  end;
+
+  ParseResponseTradesHistory(LRes);
+
+  if Assigned(FTradeHistoryProc)
+    and (TradeHistoryApplyUpdate or LRes.IsEmpty)
+  then
+    FTradeHistoryProc;
 end;
 
 constructor TDepthOkex.Create;

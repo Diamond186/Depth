@@ -36,7 +36,7 @@ type
         FStatistics24h: TStatistics24h;
         FExchange: TExchange;
 
-        FLastTradeHistoryTime: Int64;
+        FLastTimestamp: Int64;
         FBidsTradeHistory,
         FAsksTradeHistory: TTradeHistory;
 
@@ -160,7 +160,7 @@ begin
 
   FBidsTradeHistory := TTradeHistory.Create;
   FAsksTradeHistory := TTradeHistory.Create;
-  FLastTradeHistoryTime := 0;
+  FLastTimestamp := 0;
 end;
 
 destructor TCustomDepth.Destroy;

@@ -157,21 +157,21 @@ begin
     LSumAsksTrades := 0;
     LCountBidsTrades := 0;
     LCountAsksTrades := 0;
-   
+
     LJSON := TJSONObject.ParseJSONValue(aResponse);
     try
       LArr := LJSON.GetValue<TJSONArray>;
 
       if LArr.Count > 0 then
       begin
-        if FLastTradeHistoryTime = 0 then
-          FLastTradeHistoryTime := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
+        if FLastTimestamp = 0 then
+          FLastTimestamp := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
 
         for i := LArr.Count - 1 downto 0 do
         begin
           LTime := LArr.Items[i].GetValue<Int64>('time');
 
-          if LTime > FLastTradeHistoryTime then
+          if LTime > FLastTimestamp then
           begin
             LAmount := LArr.Items[i].GetValue<string>('qty').ToDouble;
             LIsBuyerMaker := LArr.Items[i].GetValue<Boolean>('isBuyerMaker');
@@ -191,7 +191,7 @@ begin
             Break;
         end;
 
-        FLastTradeHistoryTime := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
+        FLastTimestamp := LArr.Items[LArr.Count - 1].GetValue<Int64>('time');
 
         FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
         FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
@@ -202,8 +202,6 @@ begin
   end;
 
   Self.TradeHistoryApplyUpdate := True;
-
-//  if Assigned(F)
 end;
 
 procedure TDepthBinance.Statistics24h;
