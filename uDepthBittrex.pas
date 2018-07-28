@@ -12,9 +12,11 @@ type
       const
         depthBittrex = 'https://bittrex.com/api/v1.1/public/getorderbook?market=USDT-BTC&type=both';
         StatisURL = 'https://bittrex.com/api/v1.1/public/getmarketsummary?market=USDT-BTC';
+        cTradesHistoryURL = 'https://bittrex.com/api/v1.1/public/getmarkethistory?market=%s';
 
       procedure ParseResponse(const aResponse: string);
       procedure ParseResponseStatis24h(const aResponse: string);
+      procedure ParseResponseTradesHistory(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -113,6 +115,72 @@ begin
   end;
 end;
 
+procedure TDepthBittrex.ParseResponseTradesHistory(const aResponse: string);
+var
+  LJSON: TJSONValue;
+  LArr: TJSONArray;
+  i: Integer;
+  LTime: Int64;
+  LAmount: Double;
+  LIsBuyerMaker: Boolean;
+  LSumBidsTrades,
+  LSumAsksTrades: Double;
+  LCountBidsTrades,
+  LCountAsksTrades: Integer;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    LSumBidsTrades := 0;
+    LSumAsksTrades := 0;
+    LCountBidsTrades := 0;
+    LCountAsksTrades := 0;
+
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LArr := LJSON.GetValue<TJSONValue>.GetValue<TJSONArray>('result');
+
+      if LArr.Count > 0 then
+      begin
+        if FLastTimestamp = 0 then
+          FLastTimestamp := LArr.Items[0].GetValue<Int64>('Id');
+
+        for i := 0 to LArr.Count - 1 do
+        begin
+          LTime := LArr.Items[i].GetValue<Int64>('Id');
+
+          if LTime > FLastTimestamp then
+          begin
+            LAmount := LArr.Items[i].GetValue<string>('Quantity').ToDouble;
+            LIsBuyerMaker := LArr.Items[i].GetValue<string>('OrderType') = 'SELL';
+
+            if LIsBuyerMaker then
+            begin
+              LSumBidsTrades := LSumBidsTrades + LAmount;
+              Inc(LCountBidsTrades);
+            end
+            else
+            begin
+              LSumAsksTrades := LSumAsksTrades + LAmount;
+              Inc(LCountAsksTrades);
+            end;
+          end
+          else
+            Break;
+        end;
+
+        FLastTimestamp := LArr.Items[0].GetValue<Int64>('Id');
+
+        FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
+        FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
+      end;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+
+  Self.TradeHistoryApplyUpdate := True;
+end;
+
 procedure TDepthBittrex.Statistics24h;
 begin
   inherited;
@@ -125,9 +193,27 @@ begin
 end;
 
 procedure TDepthBittrex.TradesHistory;
+var
+  LRes: string;
 begin
   inherited;
 
+  try
+    LRes := FIdHTTP_TradesHistory.Get(Format(cTradesHistoryURL, ['USDT-BTC']));
+  except
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      Self.TradeHistoryApplyUpdate := True;
+    end;
+  end;
+
+  ParseResponseTradesHistory(LRes);
+
+  if Assigned(FTradeHistoryProc)
+    and (TradeHistoryApplyUpdate or LRes.IsEmpty)
+  then
+    FTradeHistoryProc;
 end;
 
 constructor TDepthBittrex.Create;

@@ -139,9 +139,9 @@ begin
       if LArr.Count > 0 then
       begin
         if FLastTimestamp = 0 then
-          FLastTimestamp := LArr.Items[LArr.Count - 1].GetValue<Int64>('timestamp');
+          FLastTimestamp := LArr.Items[0].GetValue<Int64>('timestamp');
 
-        for i := LArr.Count - 1 downto 0 do
+        for i := 0 to LArr.Count - 1 do
         begin
           LTime := LArr.Items[i].GetValue<Int64>('timestamp');
 
@@ -150,7 +150,7 @@ begin
             LAmount := LArr.Items[i].GetValue<string>('amount').ToDouble;
             LIsBuyerMaker := LArr.Items[i].GetValue<string>('type') = 'sell';
 
-            if LIsBuyerMaker then
+            if not LIsBuyerMaker then
             begin
               LSumAsksTrades := LSumAsksTrades + LAmount;
               Inc(LCountAsksTrades);
@@ -200,8 +200,8 @@ begin
       else
         LRes := FIdHTTP_TradesHistory.Get(cTradesHistoryURL + '?timestamp=' + FLastTimestamp.ToString);
 
-      // wait 4 sec for geting trades
-      FWait := 4;
+      // wait 5 sec for geting trades
+      FWait := 5;
     except
       on E: Exception do
       begin

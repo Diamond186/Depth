@@ -2,9 +2,10 @@ object framePair: TframePair
   Left = 0
   Top = 0
   Width = 300
-  Height = 475
+  Height = 305
   Align = alRight
   TabOrder = 0
+  ExplicitHeight = 475
   object Splitter1: TSplitter
     Left = 298
     Top = 0
@@ -38,7 +39,7 @@ object framePair: TframePair
       object Label3: TLabel
         Left = 0
         Top = 0
-        Width = 298
+        Width = 78
         Height = 17
         Align = alTop
         Alignment = taCenter
@@ -49,7 +50,6 @@ object framePair: TframePair
         Font.Name = 'Segoe UI'
         Font.Style = []
         ParentFont = False
-        ExplicitWidth = 78
       end
       object vstTradeHistory: TVirtualStringTree
         Left = 0
@@ -123,8 +123,8 @@ object framePair: TframePair
         object lBidsOrders: TLabel
           Left = 0
           Top = 0
-          Width = 149
-          Height = 25
+          Width = 50
+          Height = 17
           Align = alClient
           Alignment = taCenter
           Caption = '0 (0 BTC)'
@@ -135,14 +135,12 @@ object framePair: TframePair
           Font.Style = []
           ParentFont = False
           Layout = tlCenter
-          ExplicitWidth = 50
-          ExplicitHeight = 17
         end
         object lAsksOrders: TLabel
           Left = 149
           Top = 0
-          Width = 149
-          Height = 25
+          Width = 50
+          Height = 17
           Align = alClient
           Alignment = taCenter
           Caption = '0 (0 BTC)'
@@ -153,9 +151,6 @@ object framePair: TframePair
           Font.Style = []
           ParentFont = False
           Layout = tlCenter
-          ExplicitLeft = 129
-          ExplicitWidth = 50
-          ExplicitHeight = 17
         end
       end
     end
@@ -177,12 +172,12 @@ object framePair: TframePair
       ExplicitHeight = 121
       DesignSize = (
         298
-        324)
+        154)
       object vstBTC: TVirtualStringTree
         Left = 0
         Top = 57
         Width = 298
-        Height = 251
+        Height = 81
         Align = alClient
         BevelInner = bvNone
         BevelOuter = bvNone
@@ -250,7 +245,7 @@ object framePair: TframePair
           object Label2: TLabel
             Left = 0
             Top = 0
-            Width = 253
+            Width = 54
             Height = 17
             Align = alTop
             Alignment = taCenter
@@ -261,12 +256,11 @@ object framePair: TframePair
             Font.Name = 'Segoe UI'
             Font.Style = []
             ParentFont = False
-            ExplicitWidth = 54
           end
           object lPrice: TLabel
             Left = 0
             Top = 34
-            Width = 253
+            Width = 37
             Height = 23
             Align = alBottom
             Alignment = taCenter
@@ -278,7 +272,6 @@ object framePair: TframePair
             Font.Style = []
             ParentFont = False
             Layout = tlCenter
-            ExplicitWidth = 37
           end
           object GridPanel1: TGridPanel
             Left = 0
@@ -314,7 +307,7 @@ object framePair: TframePair
             object lExchangeName: TLabel
               Left = 0
               Top = 0
-              Width = 126
+              Width = 55
               Height = 17
               Align = alClient
               Alignment = taCenter
@@ -326,13 +319,12 @@ object framePair: TframePair
               Font.Style = []
               ParentFont = False
               Layout = tlCenter
-              ExplicitWidth = 55
             end
             object Label1: TLabel
               Left = 126
               Top = 0
-              Width = 127
-              Height = 17
+              Width = 77
+              Height = 21
               Align = alClient
               Alignment = taCenter
               Caption = 'BTC - USDT'
@@ -343,9 +335,6 @@ object framePair: TframePair
               Font.Style = []
               ParentFont = False
               Layout = tlCenter
-              ExplicitLeft = 106
-              ExplicitWidth = 77
-              ExplicitHeight = 21
             end
           end
         end
@@ -585,7 +574,7 @@ object framePair: TframePair
       end
       object pFooter: TPanel
         Left = 0
-        Top = 308
+        Top = 138
         Width = 298
         Height = 16
         Align = alBottom
@@ -630,8 +619,8 @@ object framePair: TframePair
           object lTotalBids: TLabel
             Left = 0
             Top = 0
-            Width = 149
-            Height = 16
+            Width = 7
+            Height = 17
             Align = alClient
             Alignment = taCenter
             Caption = '0'
@@ -641,14 +630,12 @@ object framePair: TframePair
             Font.Name = 'Segoe UI'
             Font.Style = []
             ParentFont = False
-            ExplicitWidth = 7
-            ExplicitHeight = 17
           end
           object lTotalAsks: TLabel
             Left = 149
             Top = 0
-            Width = 149
-            Height = 16
+            Width = 7
+            Height = 17
             Align = alClient
             Alignment = taCenter
             Caption = '0'
@@ -658,9 +645,6 @@ object framePair: TframePair
             Font.Name = 'Segoe UI'
             Font.Style = []
             ParentFont = False
-            ExplicitLeft = 129
-            ExplicitWidth = 7
-            ExplicitHeight = 17
           end
         end
       end
@@ -681,7 +665,6 @@ object framePair: TframePair
         Visible = False
         OnClick = listPricingExchangeClick
         OnExit = listPricingExchangeExit
-        ExplicitLeft = 137
       end
     end
   end

@@ -12,9 +12,11 @@ type
       const
         depthURL = 'https://api.huobi.pro/market/depth?symbol=btcusdt&type=step0';
         c24hURL = 'https://api.huobi.pro/market/detail?symbol=btcusdt';
+        cTradesHistoryURL = 'https://api.huobi.pro/market/history/trade?symbol=%s&size=300';
 
       procedure ParseResponse(const aResponse: string);
       procedure ParseResponse24h(const aResponse: string);
+      procedure ParseResponseTradesHistory(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -114,6 +116,77 @@ begin
   end;
 end;
 
+procedure TDepthHuobi.ParseResponseTradesHistory(const aResponse: string);
+var
+  LJSON: TJSONValue;
+  LArr, LItemArr: TJSONArray;
+  i, j: Integer;
+  LTime: Int64;
+  LAmount: Double;
+  LIsBuyerMaker: Boolean;
+  LSumBidsTrades,
+  LSumAsksTrades: Double;
+  LCountBidsTrades,
+  LCountAsksTrades: Integer;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    LSumBidsTrades := 0;
+    LSumAsksTrades := 0;
+    LCountBidsTrades := 0;
+    LCountAsksTrades := 0;
+
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LArr := LJSON.GetValue<TJSONValue>.GetValue<TJSONArray>('data');
+
+      if LArr.Count > 0 then
+      begin
+        if FLastTimestamp = 0 then
+          FLastTimestamp := LArr.Items[0].GetValue<TJSONValue>.GetValue<Int64>('id');
+
+        for i := 0 to LArr.Count - 1 do
+        begin
+          LTime := LArr.Items[i].GetValue<TJSONValue>.GetValue<Int64>('id');
+
+          if LTime > FLastTimestamp then
+          begin
+            LItemArr := LArr.Items[i].GetValue<TJSONArray>('data');
+
+            for j := 0 to LItemArr.Count - 1 do
+            begin
+              LAmount := LItemArr.Items[j].GetValue<Double>('amount');
+              LIsBuyerMaker := LItemArr.Items[j].GetValue<string>('direction') = 'sell';
+
+              if LIsBuyerMaker then
+              begin
+                LSumBidsTrades := LSumBidsTrades + LAmount;
+                Inc(LCountBidsTrades);
+              end
+              else
+              begin
+                LSumAsksTrades := LSumAsksTrades + LAmount;
+                Inc(LCountAsksTrades);
+              end;
+            end;
+          end
+          else
+            Break;
+        end;
+
+        FLastTimestamp := LArr.Items[0].GetValue<TJSONValue>.GetValue<Int64>('id');
+
+        FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
+        FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
+      end;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+
+  Self.TradeHistoryApplyUpdate := True;
+end;
+
 procedure TDepthHuobi.Statistics24h;
 begin
   inherited;
@@ -126,9 +199,28 @@ begin
 end;
 
 procedure TDepthHuobi.TradesHistory;
+var
+  LRes: string;
 begin
   inherited;
 
+//  &by=id&from=332783863
+  try
+    LRes := FIdHTTP_TradesHistory.Get(Format(cTradesHistoryURL, ['btcusdt']))
+  except
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      Self.TradeHistoryApplyUpdate := True;
+    end;
+  end;
+
+  ParseResponseTradesHistory(LRes);
+
+  if Assigned(FTradeHistoryProc)
+    and (TradeHistoryApplyUpdate or LRes.IsEmpty)
+  then
+    FTradeHistoryProc;
 end;
 
 constructor TDepthHuobi.Create;

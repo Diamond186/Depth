@@ -106,14 +106,13 @@
         </DCCReference>
         <DCCReference Include="uDepthBinance.pas"/>
         <DCCReference Include="uDepthBittrex.pas"/>
-        <DCCReference Include="uDepthPoloniex.pas"/>
         <DCCReference Include="uDepthBitfinex.pas"/>
         <DCCReference Include="uDepthKraken.pas"/>
         <DCCReference Include="uDepthBitstamp.pas"/>
         <DCCReference Include="uDepthOkex.pas"/>
         <DCCReference Include="uDepthHuobi.pas"/>
         <DCCReference Include="uDepthHitbtc.pas"/>
-        <DCCReference Include="uDepthBibox.pas"/>
+        <DCCReference Include="uDepthCoinbasePro.pas"/>
         <DCCReference Include="uCustomDepth.pas"/>
         <DCCReference Include="uExchangeClass.pas"/>
         <DCCReference Include="uExchangeManager.pas"/>
@@ -128,6 +127,7 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="uDepthBitMEX.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

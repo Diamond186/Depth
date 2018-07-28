@@ -12,9 +12,11 @@ type
       const
         depthURL = 'https://api.hitbtc.com/api/2/public/orderbook/BTCUSD?limit=0';
         c24hURL = 'https://api.hitbtc.com/api/2/public/ticker/BTCUSD';
+        cTradesHistoryURL = 'https://api.hitbtc.com/api/2/public/trades/BTCUSD?limit=300';
 
       procedure ParseResponse(const aResponse: string);
       procedure ParseResponse24h(const aResponse: string);
+      procedure ParseResponseTradesHistory(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -105,6 +107,71 @@ begin
   end;
 end;
 
+procedure TDepthHitBTC.ParseResponseTradesHistory(const aResponse: string);
+var
+  LJSON: TJSONValue;
+  LArr: TJSONArray;
+  i: Integer;
+  LTime: Int64;
+  LAmount: Double;
+  LIsBuyerMaker: Boolean;
+  LSumBidsTrades,
+  LSumAsksTrades: Double;
+  LCountBidsTrades,
+  LCountAsksTrades: Integer;
+begin
+  LSumBidsTrades := 0;
+  LSumAsksTrades := 0;
+  LCountBidsTrades := 0;
+  LCountAsksTrades := 0;
+
+  if not aResponse.IsEmpty then
+  begin
+
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LArr := LJSON.GetValue<TJSONArray>;
+
+      if LArr.Count > 0 then
+      begin
+        if FLastTimestamp = 0 then
+          FLastTimestamp := LArr.Items[0].GetValue<Int64>('id');
+
+        for i := 0 to LArr.Count - 1 do
+        begin
+          LTime := LArr.Items[i].GetValue<Int64>('id');
+
+          if LTime > FLastTimestamp then
+          begin
+            LAmount := LArr.Items[i].GetValue<string>('quantity').ToDouble;
+            LIsBuyerMaker := LArr.Items[i].GetValue<string>('side') = 'sell';
+
+            if not LIsBuyerMaker then
+            begin
+              LSumAsksTrades := LSumAsksTrades + LAmount;
+              Inc(LCountAsksTrades);
+            end
+            else
+            begin
+              LSumBidsTrades := LSumBidsTrades + LAmount;
+              Inc(LCountBidsTrades);
+            end;
+          end;
+        end;
+
+        FLastTimestamp := LArr.Items[0].GetValue<Int64>('id');
+      end;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+
+  FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
+  FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
+
+  Self.TradeHistoryApplyUpdate := True;
+end;
+
 procedure TDepthHitbtc.Statistics24h;
 begin
   inherited;
@@ -117,9 +184,31 @@ begin
 end;
 
 procedure TDepthHitBTC.TradesHistory;
+var
+  LRes: string;
 begin
   inherited;
 
+//  &by=id&from=332783863
+  try
+    if FLastTimestamp = 0 then
+      LRes := FIdHTTP_TradesHistory.Get(cTradesHistoryURL + '?limit=300')
+    else
+      LRes := FIdHTTP_TradesHistory.Get(cTradesHistoryURL + '??limit=300&by=id&from=' + FLastTimestamp.ToString);
+  except
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      Self.TradeHistoryApplyUpdate := True;
+    end;
+  end;
+
+  ParseResponseTradesHistory(LRes);
+
+  if Assigned(FTradeHistoryProc)
+    and (TradeHistoryApplyUpdate or LRes.IsEmpty)
+  then
+    FTradeHistoryProc;
 end;
 
 constructor TDepthHitBTC.Create;

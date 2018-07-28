@@ -183,8 +183,8 @@ begin
     if FExchangeManager.Binance.Active then
       listPricingExchange.AddItem(FExchangeManager.Binance.ToString, FExchangeManager.Binance);
 
-    if FExchangeManager.BiBox.Active then
-      listPricingExchange.AddItem(FExchangeManager.BiBox.ToString, FExchangeManager.BiBox);
+    if FExchangeManager.CoinbasePro.Active then
+      listPricingExchange.AddItem(FExchangeManager.CoinbasePro.ToString, FExchangeManager.CoinbasePro);
 
     if FExchangeManager.Bittrex.Active then
       listPricingExchange.AddItem(FExchangeManager.Bittrex.ToString, FExchangeManager.Bittrex);
@@ -230,7 +230,7 @@ begin
     FExchangeManager.UpdateActiveExchange;
 
     if FExchangeManager.Binance.Active then FCurrentExchange := FExchangeManager.Binance else
-    if FExchangeManager.BiBox.Active then FCurrentExchange := FExchangeManager.BiBox else
+    if FExchangeManager.CoinbasePro.Active then FCurrentExchange := FExchangeManager.CoinbasePro else
     if FExchangeManager.Bittrex.Active then FCurrentExchange := FExchangeManager.Bittrex else
     if FExchangeManager.Bitfinex.Active then FCurrentExchange := FExchangeManager.Bitfinex else
     if FExchangeManager.Kraken.Active then FCurrentExchange := FExchangeManager.Kraken else

@@ -7,14 +7,13 @@ uses
   System.Generics.Collections;
 
 type
-  TExchange = (BiBox, Binance, Bitfinex, Bitstamp, Bittrex, HitBTC, Huobi, Kraken, Okex, Poloniex);
+  TExchange = (Binance, Bitfinex, Bitstamp, Bittrex, HitBTC, Huobi, Kraken, Okex, BitMEX, CoinbasePro);
 
   TExchangeHelper = record helper for TExchange
     private
       const
-        cArrExchangesText: array [TExchange] of string = ('BiBox', 'Binance', 'Bitfinex',
-                                                           'Bitstamp', 'Bittrex', 'HitBTC',
-                                                           'Huobi', 'Kraken', 'Okex', 'Poloniex');
+        cArrExchangesText: array [TExchange] of string = ('Binance', 'Bitfinex', 'Bitstamp', 'Bittrex', 'HitBTC',
+                                                          'Huobi', 'Kraken', 'Okex', 'BitMEX', 'CoinbasePro');
     public
       function ToString: string; overload; inline;
       class function ExchangeFromString(const aExchangeName: string): TExchange; inline; static;

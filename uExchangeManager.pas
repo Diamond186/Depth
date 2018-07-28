@@ -10,14 +10,13 @@ uses
   , uExchangeClass
   , uDepthBinance
   , uDepthBittrex
-  , uDepthPoloniex
   , uDepthKraken
   , uDepthBitstamp
   , uDepthBitfinex
   , uDepthHuobi
   , uDepthOkex
   , uDepthHitbtc
-  , uDepthBibox
+  , uDepthCoinbasePro
   , uCustomDepth;
 
 type
@@ -36,7 +35,7 @@ type
       FOkex: TDepthOkex;
       FHuobi: TDepthHuobi;
       FHitBTC: TDepthHitBTC;
-      FBibox: TDepthBibox;
+      FCoinbasePro: TDepthCoinbasePro;
 
       FDepthBidsList,
       FDepthAsksList: TList<TPairDepth>;
@@ -81,7 +80,7 @@ type
       property Active: Boolean read FActive write SetActive;
       property Settings: ISettigns read FSettins;
 
-      property BiBox: TDepthBibox read FBibox;
+      property CoinbasePro: TDepthCoinbasePro read FCoinbasePro;
       property Binance: TDepthBinance read FBinance;
       property Bittrex: TDepthBittrex read FBittrex;
       property Bitfinex: TDepthBitfinex read FBitfinex;
@@ -120,7 +119,7 @@ begin
      and FOkex.ApplyUpdate
      and FHuobi.ApplyUpdate
      and FHitbtc.ApplyUpdate
-     and FBibox.ApplyUpdate
+     and FCoinbasePro.ApplyUpdate
   then
   begin
     FDepthBidsList.Clear;
@@ -132,7 +131,7 @@ begin
     FDepthBidsList.AddRange(FOkex.ArrDepthBids);
     FDepthBidsList.AddRange(FHuobi.ArrDepthBids);
     FDepthBidsList.AddRange(FHitbtc.ArrDepthBids);
-    FDepthBidsList.AddRange(FBibox.ArrDepthBids);
+    FDepthBidsList.AddRange(FCoinbasePro.ArrDepthBids);
 
     FDepthAsksList.Clear;
     FDepthAsksList.AddRange(FBinance.ArrDepthAsks);
@@ -143,10 +142,7 @@ begin
     FDepthAsksList.AddRange(FOkex.ArrDepthAsks);
     FDepthAsksList.AddRange(FHuobi.ArrDepthAsks);
     FDepthAsksList.AddRange(FHitbtc.ArrDepthAsks);
-    FDepthAsksList.AddRange(FBibox.ArrDepthAsks);
-
-    DeleteWhenLessAmount(FDepthBidsList, FSettins.MinPrice);
-    DeleteWhenLessAmount(FDepthAsksList, FSettins.MinPrice);
+    FDepthAsksList.AddRange(FCoinbasePro.ArrDepthAsks);
 
     LMaxPrice := 0;
     LMinPrice := 0;
@@ -155,7 +151,7 @@ begin
       LStat24H := nil;
 
       case FSettins.CurrentExchange of
-        TExchange.BiBox: LStat24H := FBibox.Statis24h;
+        TExchange.CoinbasePro: LStat24H := FCoinbasePro.Statis24h;
         TExchange.Binance: LStat24H := FBinance.Statis24h;
         TExchange.Bitfinex: LStat24H := FBitfinex.Statis24h;
         TExchange.Bitstamp: LStat24H := FBitstamp.Statis24h;
@@ -211,6 +207,9 @@ begin
     LTotalBids := GetTotalAmount(FDepthBidsList);
     LTotalAsks := GetTotalAmount(FDepthAsksList);
 
+    DeleteWhenLessAmount(FDepthBidsList, FSettins.MinPrice);
+    DeleteWhenLessAmount(FDepthAsksList, FSettins.MinPrice);
+
     TThread.Synchronize(TThread.Current,
     procedure
     begin
@@ -229,7 +228,7 @@ begin
     FOkex.ApplyUpdate := False;
     FHuobi.ApplyUpdate := False;
     FHitbtc.ApplyUpdate := False;
-    FBibox.ApplyUpdate := False;
+    FCoinbasePro.ApplyUpdate := False;
 
     // Запуск збору стаканів
     FTimer.Enabled := True;
@@ -255,7 +254,7 @@ end;
 function TExchangeManager.GetDepthFromExchange(const aExchage: TExchange): TCustomDepth;
 begin
   case aExchage of
-    TExchange.BiBox: Result := FBibox;
+    TExchange.CoinbasePro: Result := FCoinbasePro;
     TExchange.Binance: Result := FBinance;
     TExchange.Bitfinex: Result := FBitfinex;
     TExchange.Bitstamp: Result := FBitstamp;
@@ -318,7 +317,7 @@ begin
   FOkex.Active := FSettins.UseOkex;
   FHuobi.Active := FSettins.UseHuobi;
   FHitbtc.Active := FSettins.UseHitBTC;
-  FBibox.Active := FSettins.UseBiBox;
+  FCoinbasePro.Active := FSettins.UseCoinbasePro;
 
   Active := True;
 end;
@@ -333,8 +332,7 @@ begin
   FOkex.BeginManage;
   FHuobi.BeginManage;
   FHitbtc.BeginManage;
-  FBibox.BeginManage;
-//  FPoloniex.BeginManage;
+  FCoinbasePro.BeginManage;
 end;
 
 procedure TExchangeManager.BeginStatistics24h;
@@ -347,7 +345,7 @@ begin
   FOkex.BeginStatistics24h;
   FHuobi.BeginStatistics24h;
   FHitbtc.BeginStatistics24h;
-  FBibox.BeginStatistics24h;
+  FCoinbasePro.BeginStatistics24h;
 end;
 
 procedure TExchangeManager.BeginTradeHistory;
@@ -360,7 +358,7 @@ begin
   FOkex.BeginTradeHistory;
   FHuobi.BeginTradeHistory;
   FHitbtc.BeginTradeHistory;
-  FBibox.BeginTradeHistory;
+  FCoinbasePro.BeginTradeHistory;
 end;
 
 constructor TExchangeManager.Create(const aSettins: ISettigns);
@@ -436,10 +434,10 @@ begin
   FHitBTC.OnTradeHistory := DoTradeHistory;
   FHitBTC.Active := FSettins.UseHitBTC;
 
-  FBibox := TDepthBibox.Create;
-  FBibox.OnDepthManage := DoDepthManage;
-  FBibox.OnTradeHistory := DoTradeHistory;
-  FBibox.Active := FSettins.UseBiBox;
+  FCoinbasePro := TDepthCoinbasePro.Create;
+  FCoinbasePro.OnDepthManage := DoDepthManage;
+  FCoinbasePro.OnTradeHistory := DoTradeHistory;
+  FCoinbasePro.Active := FSettins.UseCoinbasePro;
 
 //  FPoloniex := TDepthPoloniex.Create;
 //  FPoloniex.OnDepthManage := DoDepthManageBittrex;
@@ -468,7 +466,7 @@ begin
   FreeAndNil(FOkex);
   FreeAndNil(FHuobi);
   FreeAndNil(FHitbtc);
-  FreeAndNil(FBibox);
+  FreeAndNil(FCoinbasePro);
 //  FreeAndNil(FPoloniex);
 
   FreeAndNil(FDepthAsksList);
@@ -502,7 +500,7 @@ begin
     and FOkex.TradeHistoryApplyUpdate
     and FHuobi.TradeHistoryApplyUpdate
     and FHitBTC.TradeHistoryApplyUpdate
-    and FBibox.TradeHistoryApplyUpdate
+    and FCoinbasePro.TradeHistoryApplyUpdate
   then
   begin
     FAsksTradeHistory.SetOneSec(FBinance.AsksTradeHistory.OneSec.Count +
@@ -513,7 +511,7 @@ begin
                                 FOkex.AsksTradeHistory.OneSec.Count +
                                 FHuobi.AsksTradeHistory.OneSec.Count +
                                 FHitBTC.AsksTradeHistory.OneSec.Count +
-                                FBibox.AsksTradeHistory.OneSec.Count,
+                                FCoinbasePro.AsksTradeHistory.OneSec.Count,
                                 FBinance.AsksTradeHistory.OneSec.Amount +
                                 FBittrex.AsksTradeHistory.OneSec.Amount +
                                 FBitfinex.AsksTradeHistory.OneSec.Amount +
@@ -522,7 +520,7 @@ begin
                                 FOkex.AsksTradeHistory.OneSec.Amount +
                                 FHuobi.AsksTradeHistory.OneSec.Amount +
                                 FHitBTC.AsksTradeHistory.OneSec.Amount +
-                                FBibox.AsksTradeHistory.OneSec.Amount);
+                                FCoinbasePro.AsksTradeHistory.OneSec.Amount);
 
     FAsksTradeHistory.Set15Sec(FBinance.AsksTradeHistory._15Sec.Count +
                                FBittrex.AsksTradeHistory._15Sec.Count +
@@ -532,7 +530,7 @@ begin
                                FOkex.AsksTradeHistory._15Sec.Count +
                                FHuobi.AsksTradeHistory._15Sec.Count +
                                FHitBTC.AsksTradeHistory._15Sec.Count +
-                               FBibox.AsksTradeHistory._15Sec.Count,
+                               FCoinbasePro.AsksTradeHistory._15Sec.Count,
                                FBinance.AsksTradeHistory._15Sec.Amount +
                                FBittrex.AsksTradeHistory._15Sec.Amount +
                                FBitfinex.AsksTradeHistory._15Sec.Amount +
@@ -541,7 +539,7 @@ begin
                                FOkex.AsksTradeHistory._15Sec.Amount +
                                FHuobi.AsksTradeHistory._15Sec.Amount +
                                FHitBTC.AsksTradeHistory._15Sec.Amount +
-                               FBibox.AsksTradeHistory._15Sec.Amount);
+                               FCoinbasePro.AsksTradeHistory._15Sec.Amount);
 
     FAsksTradeHistory.Set30Sec(FBinance.AsksTradeHistory._30Sec.Count +
                                FBittrex.AsksTradeHistory._30Sec.Count +
@@ -551,7 +549,7 @@ begin
                                FOkex.AsksTradeHistory._30Sec.Count +
                                FHuobi.AsksTradeHistory._30Sec.Count +
                                FHitBTC.AsksTradeHistory._30Sec.Count +
-                               FBibox.AsksTradeHistory._30Sec.Count,
+                               FCoinbasePro.AsksTradeHistory._30Sec.Count,
                                FBinance.AsksTradeHistory._30Sec.Amount +
                                FBittrex.AsksTradeHistory._30Sec.Amount +
                                FBitfinex.AsksTradeHistory._30Sec.Amount +
@@ -560,7 +558,7 @@ begin
                                FOkex.AsksTradeHistory._30Sec.Amount +
                                FHuobi.AsksTradeHistory._30Sec.Amount +
                                FHitBTC.AsksTradeHistory._30Sec.Amount +
-                               FBibox.AsksTradeHistory._30Sec.Amount);
+                               FCoinbasePro.AsksTradeHistory._30Sec.Amount);
 
     FAsksTradeHistory.Set1Min(FBinance.AsksTradeHistory._1Min.Count +
                               FBittrex.AsksTradeHistory._1Min.Count +
@@ -570,7 +568,7 @@ begin
                               FOkex.AsksTradeHistory._1Min.Count +
                               FHuobi.AsksTradeHistory._1Min.Count +
                               FHitBTC.AsksTradeHistory._1Min.Count +
-                              FBibox.AsksTradeHistory._1Min.Count,
+                              FCoinbasePro.AsksTradeHistory._1Min.Count,
                               FBinance.AsksTradeHistory._1Min.Amount +
                               FBittrex.AsksTradeHistory._1Min.Amount +
                               FBitfinex.AsksTradeHistory._1Min.Amount +
@@ -579,7 +577,7 @@ begin
                               FOkex.AsksTradeHistory._1Min.Amount +
                               FHuobi.AsksTradeHistory._1Min.Amount +
                               FHitBTC.AsksTradeHistory._1Min.Amount +
-                              FBibox.AsksTradeHistory._1Min.Amount);
+                              FCoinbasePro.AsksTradeHistory._1Min.Amount);
 
     FAsksTradeHistory.Set15Min(FBinance.AsksTradeHistory._15Min.Count +
                                FBittrex.AsksTradeHistory._15Min.Count +
@@ -589,7 +587,7 @@ begin
                                FOkex.AsksTradeHistory._15Min.Count +
                                FHuobi.AsksTradeHistory._15Min.Count +
                                FHitBTC.AsksTradeHistory._15Min.Count +
-                               FBibox.AsksTradeHistory._15Min.Count,
+                               FCoinbasePro.AsksTradeHistory._15Min.Count,
                                FBinance.AsksTradeHistory._15Min.Amount +
                                FBittrex.AsksTradeHistory._15Min.Amount +
                                FBitfinex.AsksTradeHistory._15Min.Amount +
@@ -598,7 +596,7 @@ begin
                                FOkex.AsksTradeHistory._15Min.Amount +
                                FHuobi.AsksTradeHistory._15Min.Amount +
                                FHitBTC.AsksTradeHistory._15Min.Amount +
-                               FBibox.AsksTradeHistory._15Min.Amount);
+                               FCoinbasePro.AsksTradeHistory._15Min.Amount);
 
     FAsksTradeHistory.Set30Min(FBinance.AsksTradeHistory._30Min.Count +
                                FBittrex.AsksTradeHistory._30Min.Count +
@@ -608,7 +606,7 @@ begin
                                FOkex.AsksTradeHistory._30Min.Count +
                                FHuobi.AsksTradeHistory._30Min.Count +
                                FHitBTC.AsksTradeHistory._30Min.Count +
-                               FBibox.AsksTradeHistory._30Min.Count,
+                               FCoinbasePro.AsksTradeHistory._30Min.Count,
                                FBinance.AsksTradeHistory._30Min.Amount +
                                FBittrex.AsksTradeHistory._30Min.Amount +
                                FBitfinex.AsksTradeHistory._30Min.Amount +
@@ -617,7 +615,7 @@ begin
                                FOkex.AsksTradeHistory._30Min.Amount +
                                FHuobi.AsksTradeHistory._30Min.Amount +
                                FHitBTC.AsksTradeHistory._30Min.Amount +
-                               FBibox.AsksTradeHistory._30Min.Amount);
+                               FCoinbasePro.AsksTradeHistory._30Min.Amount);
 
     FAsksTradeHistory.Set1Hour(FBinance.AsksTradeHistory._1Hour.Count +
                                FBittrex.AsksTradeHistory._1Hour.Count +
@@ -627,7 +625,7 @@ begin
                                FOkex.AsksTradeHistory._1Hour.Count +
                                FHuobi.AsksTradeHistory._1Hour.Count +
                                FHitBTC.AsksTradeHistory._1Hour.Count +
-                               FBibox.AsksTradeHistory._1Hour.Count,
+                               FCoinbasePro.AsksTradeHistory._1Hour.Count,
                                FBinance.AsksTradeHistory._1Hour.Amount +
                                FBittrex.AsksTradeHistory._1Hour.Amount +
                                FBitfinex.AsksTradeHistory._1Hour.Amount +
@@ -636,7 +634,7 @@ begin
                                FOkex.AsksTradeHistory._1Hour.Amount +
                                FHuobi.AsksTradeHistory._1Hour.Amount +
                                FHitBTC.AsksTradeHistory._1Hour.Amount +
-                               FBibox.AsksTradeHistory._1Hour.Amount);
+                               FCoinbasePro.AsksTradeHistory._1Hour.Amount);
 
     FBidsTradeHistory.SetOneSec(FBinance.BidsTradeHistory.OneSec.Count +
                                 FBittrex.BidsTradeHistory.OneSec.Count +
@@ -646,7 +644,7 @@ begin
                                 FOkex.BidsTradeHistory.OneSec.Count +
                                 FHuobi.BidsTradeHistory.OneSec.Count +
                                 FHitBTC.BidsTradeHistory.OneSec.Count +
-                                FBibox.BidsTradeHistory.OneSec.Count,
+                                FCoinbasePro.BidsTradeHistory.OneSec.Count,
                                 FBinance.BidsTradeHistory.OneSec.Amount +
                                 FBittrex.BidsTradeHistory.OneSec.Amount +
                                 FBitfinex.BidsTradeHistory.OneSec.Amount +
@@ -655,7 +653,7 @@ begin
                                 FOkex.BidsTradeHistory.OneSec.Amount +
                                 FHuobi.BidsTradeHistory.OneSec.Amount +
                                 FHitBTC.BidsTradeHistory.OneSec.Amount +
-                                FBibox.BidsTradeHistory.OneSec.Amount);
+                                FCoinbasePro.BidsTradeHistory.OneSec.Amount);
 
     FBidsTradeHistory.Set15Sec(FBinance.BidsTradeHistory._15Sec.Count +
                                FBittrex.BidsTradeHistory._15Sec.Count +
@@ -665,7 +663,7 @@ begin
                                FOkex.BidsTradeHistory._15Sec.Count +
                                FHuobi.BidsTradeHistory._15Sec.Count +
                                FHitBTC.BidsTradeHistory._15Sec.Count +
-                               FBibox.BidsTradeHistory._15Sec.Count,
+                               FCoinbasePro.BidsTradeHistory._15Sec.Count,
                                FBinance.BidsTradeHistory._15Sec.Amount +
                                FBittrex.BidsTradeHistory._15Sec.Amount +
                                FBitfinex.BidsTradeHistory._15Sec.Amount +
@@ -674,7 +672,7 @@ begin
                                FOkex.BidsTradeHistory._15Sec.Amount +
                                FHuobi.BidsTradeHistory._15Sec.Amount +
                                FHitBTC.BidsTradeHistory._15Sec.Amount +
-                               FBibox.BidsTradeHistory._15Sec.Amount);
+                               FCoinbasePro.BidsTradeHistory._15Sec.Amount);
 
     FBidsTradeHistory.Set30Sec(FBinance.BidsTradeHistory._30Sec.Count +
                                FBittrex.BidsTradeHistory._30Sec.Count +
@@ -684,7 +682,7 @@ begin
                                FOkex.BidsTradeHistory._30Sec.Count +
                                FHuobi.BidsTradeHistory._30Sec.Count +
                                FHitBTC.BidsTradeHistory._30Sec.Count +
-                               FBibox.BidsTradeHistory._30Sec.Count,
+                               FCoinbasePro.BidsTradeHistory._30Sec.Count,
                                FBinance.BidsTradeHistory._30Sec.Amount +
                                FBittrex.BidsTradeHistory._30Sec.Amount +
                                FBitfinex.BidsTradeHistory._30Sec.Amount +
@@ -693,7 +691,7 @@ begin
                                FOkex.BidsTradeHistory._30Sec.Amount +
                                FHuobi.BidsTradeHistory._30Sec.Amount +
                                FHitBTC.BidsTradeHistory._30Sec.Amount +
-                               FBibox.BidsTradeHistory._30Sec.Amount);
+                               FCoinbasePro.BidsTradeHistory._30Sec.Amount);
 
     FBidsTradeHistory.Set1Min(FBinance.BidsTradeHistory._1Min.Count +
                               FBittrex.BidsTradeHistory._1Min.Count +
@@ -703,7 +701,7 @@ begin
                               FOkex.BidsTradeHistory._1Min.Count +
                               FHuobi.BidsTradeHistory._1Min.Count +
                               FHitBTC.BidsTradeHistory._1Min.Count +
-                              FBibox.BidsTradeHistory._1Min.Count,
+                              FCoinbasePro.BidsTradeHistory._1Min.Count,
                               FBinance.BidsTradeHistory._1Min.Amount +
                               FBittrex.BidsTradeHistory._1Min.Amount +
                               FBitfinex.BidsTradeHistory._1Min.Amount +
@@ -712,7 +710,7 @@ begin
                               FOkex.BidsTradeHistory._1Min.Amount +
                               FHuobi.BidsTradeHistory._1Min.Amount +
                               FHitBTC.BidsTradeHistory._1Min.Amount +
-                              FBibox.BidsTradeHistory._1Min.Amount);
+                              FCoinbasePro.BidsTradeHistory._1Min.Amount);
 
     FBidsTradeHistory.Set15Min(FBinance.BidsTradeHistory._15Min.Count +
                                FBittrex.BidsTradeHistory._15Min.Count +
@@ -722,7 +720,7 @@ begin
                                FOkex.BidsTradeHistory._15Min.Count +
                                FHuobi.BidsTradeHistory._15Min.Count +
                                FHitBTC.BidsTradeHistory._15Min.Count +
-                               FBibox.BidsTradeHistory._15Min.Count,
+                               FCoinbasePro.BidsTradeHistory._15Min.Count,
                                FBinance.BidsTradeHistory._15Min.Amount +
                                FBittrex.BidsTradeHistory._15Min.Amount +
                                FBitfinex.BidsTradeHistory._15Min.Amount +
@@ -731,7 +729,7 @@ begin
                                FOkex.BidsTradeHistory._15Min.Amount +
                                FHuobi.BidsTradeHistory._15Min.Amount +
                                FHitBTC.BidsTradeHistory._15Min.Amount +
-                               FBibox.BidsTradeHistory._15Min.Amount);
+                               FCoinbasePro.BidsTradeHistory._15Min.Amount);
 
     FBidsTradeHistory.Set30Min(FBinance.BidsTradeHistory._30Min.Count +
                                FBittrex.BidsTradeHistory._30Min.Count +
@@ -741,7 +739,7 @@ begin
                                FOkex.BidsTradeHistory._30Min.Count +
                                FHuobi.BidsTradeHistory._30Min.Count +
                                FHitBTC.BidsTradeHistory._30Min.Count +
-                               FBibox.BidsTradeHistory._30Min.Count,
+                               FCoinbasePro.BidsTradeHistory._30Min.Count,
                                FBinance.BidsTradeHistory._30Min.Amount +
                                FBittrex.BidsTradeHistory._30Min.Amount +
                                FBitfinex.BidsTradeHistory._30Min.Amount +
@@ -750,7 +748,7 @@ begin
                                FOkex.BidsTradeHistory._30Min.Amount +
                                FHuobi.BidsTradeHistory._30Min.Amount +
                                FHitBTC.BidsTradeHistory._30Min.Amount +
-                               FBibox.BidsTradeHistory._30Min.Amount);
+                               FCoinbasePro.BidsTradeHistory._30Min.Amount);
 
     FBidsTradeHistory.Set1Hour(FBinance.BidsTradeHistory._1Hour.Count +
                                FBittrex.BidsTradeHistory._1Hour.Count +
@@ -760,7 +758,7 @@ begin
                                FOkex.BidsTradeHistory._1Hour.Count +
                                FHuobi.BidsTradeHistory._1Hour.Count +
                                FHitBTC.BidsTradeHistory._1Hour.Count +
-                               FBibox.BidsTradeHistory._1Hour.Count,
+                               FCoinbasePro.BidsTradeHistory._1Hour.Count,
                                FBinance.BidsTradeHistory._1Hour.Amount +
                                FBittrex.BidsTradeHistory._1Hour.Amount +
                                FBitfinex.BidsTradeHistory._1Hour.Amount +
@@ -769,7 +767,7 @@ begin
                                FOkex.BidsTradeHistory._1Hour.Amount +
                                FHuobi.BidsTradeHistory._1Hour.Amount +
                                FHitBTC.BidsTradeHistory._1Hour.Amount +
-                               FBibox.BidsTradeHistory._1Hour.Amount);
+                               FCoinbasePro.BidsTradeHistory._1Hour.Amount);
 
     TThread.Synchronize(TThread.Current,
     procedure
@@ -786,7 +784,7 @@ begin
     FOkex.TradeHistoryApplyUpdate := False;
     FHuobi.TradeHistoryApplyUpdate := False;
     FHitbtc.TradeHistoryApplyUpdate := False;
-    FBibox.TradeHistoryApplyUpdate := False;
+    FCoinbasePro.TradeHistoryApplyUpdate := False;
 
     // Запуск збору стаканів
     FTradesHistoryTimer.Enabled := True;

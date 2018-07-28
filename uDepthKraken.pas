@@ -12,9 +12,11 @@ type
       const
         depthURL = 'https://api.kraken.com/0/public/Depth?pair=XBTUSD&count=1000';
         c24hURL = 'https://api.kraken.com/0/public/Ticker?pair=XBTUSD';
+        cTradesHistoryURL = 'https://api.kraken.com/0/public/Trades?pair=%s';
 
       procedure ParseResponse(const aResponse: string);
       procedure ParseResponse24h(const aResponse: string);
+      procedure ParseResponseTradesHistory(const aResponse: string);
     protected
       procedure Depth; override;
       procedure Statistics24h; override;
@@ -118,6 +120,72 @@ begin
   end;
 end;
 
+procedure TDepthKraken.ParseResponseTradesHistory(const aResponse: string);
+var
+  LJSON, LResult: TJSONValue;
+  LArr, LItemArr: TJSONArray;
+  i, j: Integer;
+  LTime: Int64;
+  LAmount: Double;
+  LIsBuyerMaker: Boolean;
+  LSumBidsTrades,
+  LSumAsksTrades: Double;
+  LCountBidsTrades,
+  LCountAsksTrades: Integer;
+begin
+  if not aResponse.IsEmpty then
+  begin
+    LSumBidsTrades := 0;
+    LSumAsksTrades := 0;
+    LCountBidsTrades := 0;
+    LCountAsksTrades := 0;
+
+    LJSON := TJSONObject.ParseJSONValue(aResponse);
+    try
+      LResult := LJSON.GetValue<TJSONValue>('result');
+      LArr := LResult.GetValue<TJSONArray>('XXBTZUSD');
+
+      if LArr.Count > 0 then
+      begin
+        if FLastTimestamp = 0 then
+        begin
+          FLastTimestamp := LResult.GetValue<string>('last').ToInt64;
+          Self.TradeHistoryApplyUpdate := True;
+          Exit;
+        end;
+
+        for i := 0 to LArr.Count - 1 do
+        begin
+          LItemArr := LArr.Items[i].GetValue<TJSONArray>;
+
+          LAmount := LItemArr.Items[1].GetValue<string>.ToDouble;
+          LIsBuyerMaker := LItemArr.Items[3].GetValue<string> = 's';
+
+          if LIsBuyerMaker then
+          begin
+            LSumBidsTrades := LSumBidsTrades + LAmount;
+            Inc(LCountBidsTrades);
+          end
+          else
+          begin
+            LSumAsksTrades := LSumAsksTrades + LAmount;
+            Inc(LCountAsksTrades);
+          end;
+        end;
+
+        FLastTimestamp := LResult.GetValue<string>('last').ToInt64;
+
+        FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
+        FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
+      end;
+    finally
+      FreeAndNil(LJSON);
+    end;
+  end;
+
+  Self.TradeHistoryApplyUpdate := True;
+end;
+
 procedure TDepthKraken.Statistics24h;
 begin
   inherited;
@@ -130,9 +198,32 @@ begin
 end;
 
 procedure TDepthKraken.TradesHistory;
+var
+  LRes, LUrl: string;
 begin
   inherited;
 
+  try
+    LUrl := Format(cTradesHistoryURL, ['XBTUSD', FLastTimestamp]);
+
+    if FLastTimestamp > 0 then
+      LUrl := LUrl + '&since=' + FLastTimestamp.ToString;
+
+    LRes := FIdHTTP_TradesHistory.Get(LUrl);
+  except
+    on E: Exception do
+    begin
+      LRes := EmptyStr;
+      Self.TradeHistoryApplyUpdate := True;
+    end;
+  end;
+
+  ParseResponseTradesHistory(LRes);
+
+  if Assigned(FTradeHistoryProc)
+    and (TradeHistoryApplyUpdate or LRes.IsEmpty)
+  then
+    FTradeHistoryProc;
 end;
 
 constructor TDepthKraken.Create;

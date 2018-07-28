@@ -13,7 +13,7 @@ type
     procedure SetBoldPrice(const Value: Currency);
     procedure SetMinPrice(const Value: Currency);
     procedure SetPair(const Value: String);
-    function GetUseBiBox: Boolean;
+    function GetUseCoinbasePro: Boolean;
     function GetUseBinance: Boolean;
     function GetUseBitfinex: Boolean;
     function GetUseBitstamp: Boolean;
@@ -23,7 +23,7 @@ type
     function GetUseKraken: Boolean;
     function GetUseOkex: Boolean;
     function  GetCurrentExchange: TExchange;
-    procedure SetUseBiBox(const Value: Boolean);
+    procedure SetUseCoinbasePro(const Value: Boolean);
     procedure SetUseBinance(const Value: Boolean);
     procedure SetUseBitfinex(const Value: Boolean);
     procedure SetUseBitstamp(const Value: Boolean);
@@ -55,7 +55,7 @@ type
     property RangeMinPrice: Double read GetRangeMinPrice write SetRangeMinPrice;
     property RangeMaxPrice: Double read GetRangeMaxPrice write SetRangeMaxPrice;
 
-    property UseBiBox: Boolean read GetUseBiBox write SetUseBiBox;
+    property UseCoinbasePro: Boolean read GetUseCoinbasePro write SetUseCoinbasePro;
     property UseBinance: Boolean read GetUseBinance write SetUseBinance;
     property UseBitfinex: Boolean read GetUseBitfinex write SetUseBitfinex;
     property UseBitstamp: Boolean read GetUseBitstamp write SetUseBitstamp;
@@ -82,7 +82,7 @@ type
       FPair,
       FSectionName: String;
 
-      FUseBiBox: Boolean;
+      FUseCoinbasePro: Boolean;
       FUseBinance: Boolean;
       FUseBitfinex: Boolean;
       FUseBitstamp: Boolean;
@@ -109,7 +109,7 @@ type
       procedure SetBoldPrice(const Value: Currency);
       procedure SetMinPrice(const Value: Currency);
       procedure SetPair(const Value: String);
-      function GetUseBiBox: Boolean;
+      function GetUseCoinbasePro: Boolean;
       function GetUseBinance: Boolean;
       function GetUseBitfinex: Boolean;
       function GetUseBitstamp: Boolean;
@@ -118,7 +118,7 @@ type
       function GetUseHuobi: Boolean;
       function GetUseKraken: Boolean;
       function GetUseOkex: Boolean;
-      procedure SetUseBiBox(const Value: Boolean);
+      procedure SetUseCoinbasePro(const Value: Boolean);
       procedure SetUseBinance(const Value: Boolean);
       procedure SetUseBitfinex(const Value: Boolean);
       procedure SetUseBitstamp(const Value: Boolean);
@@ -153,7 +153,7 @@ type
       property RangeMinPrice: Double read GetRangeMinPrice write SetRangeMinPrice;
       property RangeMaxPrice: Double read GetRangeMaxPrice write SetRangeMaxPrice;
 
-      property UseBiBox: Boolean read GetUseBiBox write SetUseBiBox;
+      property UseCoinbasePro: Boolean read GetUseCoinbasePro write SetUseCoinbasePro;
       property UseBinance: Boolean read GetUseBinance write SetUseBinance;
       property UseBitfinex: Boolean read GetUseBitfinex write SetUseBitfinex;
       property UseBitstamp: Boolean read GetUseBitstamp write SetUseBitstamp;
@@ -231,9 +231,9 @@ begin
   Result := FRangePercent;
 end;
 
-function TSettigns.GetUseBiBox: Boolean;
+function TSettigns.GetUseCoinbasePro: Boolean;
 begin
-  Result := FUseBiBox;
+  Result := FUseCoinbasePro;
 end;
 
 function TSettigns.GetUseBinance: Boolean;
@@ -295,7 +295,7 @@ begin
     FUseBitstamp := ReadBool(aSectionName, TExchange.Bitstamp.ToString, False);
     FUseBitfinex := ReadBool(aSectionName, TExchange.Bitfinex.ToString, False);
     FUseBinance := ReadBool(aSectionName, TExchange.Binance.ToString, False);
-    FUseBiBox := ReadBool(aSectionName, TExchange.BiBox.ToString, False);
+    FUseCoinbasePro := ReadBool(aSectionName, TExchange.CoinbasePro.ToString, False);
 
     FRangeIsPercent := ReadBool(aSectionName, 'RangeIsPercent', True);
     FRangePercent   := ReadInteger(aSectionName, 'RangePercent', 50);
@@ -314,7 +314,7 @@ begin
       if FUseBitstamp then FCurrentExchange := TExchange.Bitstamp else
       if FUseBitfinex then FCurrentExchange := TExchange.Bitfinex else
       if FUseBinance then FCurrentExchange := TExchange.Binance else
-      if FUseBiBox then FCurrentExchange := TExchange.BiBox;
+      if FUseCoinbasePro then FCurrentExchange := TExchange.CoinbasePro;
   finally
     Free;
   end;
@@ -336,7 +336,7 @@ begin
     WriteBool(FSectionName, TExchange.Bitstamp.ToString, FUseBitstamp);
     WriteBool(FSectionName, TExchange.Bitfinex.ToString, FUseBitfinex);
     WriteBool(FSectionName, TExchange.Binance.ToString, FUseBinance);
-    WriteBool(FSectionName, TExchange.BiBox.ToString, FUseBiBox);
+    WriteBool(FSectionName, TExchange.CoinbasePro.ToString, FUseCoinbasePro);
     WriteString(FSectionName, 'CurrentExchange', FCurrentExchange.ToString);
 
     WriteBool(FSectionName, 'RangeIsPercent', FRangeIsPercent);
@@ -390,9 +390,9 @@ begin
   FRangePercent := Value;
 end;
 
-procedure TSettigns.SetUseBiBox(const Value: Boolean);
+procedure TSettigns.SetUseCoinbasePro(const Value: Boolean);
 begin
-  FUseBiBox := Value;
+  FUseCoinbasePro := Value;
 end;
 
 procedure TSettigns.SetUseBinance(const Value: Boolean);

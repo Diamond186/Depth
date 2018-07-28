@@ -155,7 +155,7 @@ begin
             LAmount := LArr.Items[i].GetValue<string>('amount').ToDouble;
             LIsBuyerMaker := LArr.Items[i].GetValue<string>('type') = 'sell';
 
-            if LIsBuyerMaker then
+            if not LIsBuyerMaker then
             begin
               LSumAsksTrades := LSumAsksTrades + LAmount;
               Inc(LCountAsksTrades);

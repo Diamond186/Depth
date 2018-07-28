@@ -1,4 +1,4 @@
-unit uDepthBitstamp;
+unit uDepthCoinbasePro;
 
 interface
 
@@ -7,12 +7,15 @@ uses
   uCustomDepth;
 
 type
-  TDepthBitstamp = class(TCustomDepth)
+  TDepthCoinbasePro = class(TCustomDepth)
     private
       const
-        depthURL = 'https://www.bitstamp.net/api/v2/order_book/btcusd/';
-        c24hURL = 'https://www.bitstamp.net/api/v2/ticker/btcusd/';
-        cTradesHistoryURL = 'https://www.bitstamp.net/api/v2/transactions/%s/?time=minute';
+        depthURL = 'https://api.pro.coinbase.com/products/%s/book?level=2';
+        c24hURL = 'https://api.pro.coinbase.com/products/%s/stats';
+        cTradesHistoryURL = 'https://api.pro.coinbase.com/products/%s/trades';
+
+      var
+        FWait: Word;
 
       procedure ParseResponse(const aResponse: string);
       procedure ParseResponse24h(const aResponse: string);
@@ -30,9 +33,9 @@ implementation
 uses
   System.JSON, uExchangeClass, uLogging;
 
-{ TDepthBitstamp }
+{ TDepthBibox }
 
-procedure TDepthBitstamp.ParseResponse(const aResponse: string);
+procedure TDepthCoinbasePro.ParseResponse(const aResponse: string);
 var
   LJSON, LRes: TJSONValue;
   LArr, LItem: TJSONArray;
@@ -45,35 +48,31 @@ begin
 
     LJSON := TJSONObject.ParseJSONValue(aResponse);
     try
-      LRes := LJSON.GetValue<TJSONObject>;
-
       //  buy
-      if LRes.TryGetValue<TJSONArray>('bids', LArr) then
+      if LJSON.TryGetValue<TJSONArray>('bids', LArr) then
       begin
         SetLength(FArrDepthBids, LArr.Count);
 
         for i := 0 to LArr.Count - 1 do
         begin
           LItem := LArr.Items[i].GetValue<TJSONArray>;
-
-          FArrDepthBids[i] := TPairDepth.Create(LItem.Items[0].GetValue<Currency>,
-                                                LItem.Items[1].GetValue<Double>,
-                                                TExchange.Bitstamp);
+          FArrDepthBids[i] := TPairDepth.Create(LItem.Items[0].GetValue<string>.ToDouble,
+                                                LItem.Items[1].GetValue<string>.ToDouble,
+                                                TExchange.CoinbasePro);
         end;
       end;
 
       // sell
-      if LRes.TryGetValue<TJSONArray>('asks', LArr) then
+      if LJSON.TryGetValue<TJSONArray>('asks', LArr) then
       begin
         SetLength(FArrDepthAsks, LArr.Count);
 
         for i := 0 to LArr.Count - 1 do
         begin
           LItem := LArr.Items[i].GetValue<TJSONArray>;
-
-          FArrDepthAsks[i] := TPairDepth.Create(LItem.Items[0].GetValue<Currency>,
-                                                LItem.Items[1].GetValue<Double>,
-                                                TExchange.Bitstamp);
+          FArrDepthAsks[i] := TPairDepth.Create(LItem.Items[0].GetValue<string>.ToDouble,
+                                                LItem.Items[1].GetValue<string>.ToDouble,
+                                                TExchange.CoinbasePro);
         end;
       end;
     finally
@@ -84,25 +83,27 @@ begin
   end;
 end;
 
-procedure TDepthBitstamp.ParseResponse24h(const aResponse: string);
+procedure TDepthCoinbasePro.ParseResponse24h(const aResponse: string);
 var
-  LJSON: TJSONValue;
+  LJSON, LObj: TJSONValue;
   LStr: String;
 begin
   if not aResponse.IsEmpty then
   begin
     LJSON := TJSONObject.ParseJSONValue(aResponse);
     try
-      if LJSON.TryGetValue<String>('last', LStr) then
+      LObj := LJSON.GetValue<TJSONValue>;
+
+      if LObj.TryGetValue<String>('last', LStr) then
         FStatistics24h.LastPrice := LStr.ToExtended;
 
-      if LJSON.TryGetValue<String>('high', LStr) then
+      if LObj.TryGetValue<String>('high', LStr) then
         FStatistics24h.HighPrice := LStr.ToExtended;
 
-      if LJSON.TryGetValue<String>('low', LStr) then
+      if LObj.TryGetValue<String>('low', LStr) then
         FStatistics24h.LowPrice := LStr.ToExtended;
 
-      if LJSON.TryGetValue<String>('volume', LStr) then
+      if LObj.TryGetValue<String>('volume', LStr) then
         FStatistics24h.Volume := LStr.ToExtended;
     finally
       FreeAndNil(LJSON);
@@ -110,7 +111,7 @@ begin
   end;
 end;
 
-procedure TDepthBitstamp.ParseResponseTradesHistory(const aResponse: string);
+procedure TDepthCoinbasePro.ParseResponseTradesHistory(const aResponse: string);
 var
   LJSON: TJSONValue;
   LArr: TJSONArray;
@@ -137,18 +138,18 @@ begin
       if LArr.Count > 0 then
       begin
         if FLastTimestamp = 0 then
-          FLastTimestamp := LArr.Items[0].GetValue<Int64>('date');
+          FLastTimestamp := LArr.Items[0].GetValue<Int64>('trade_id');
 
         for i := 0 to LArr.Count - 1 do
         begin
-          LTime := LArr.Items[i].GetValue<Int64>('date');
+          LTime := LArr.Items[i].GetValue<Int64>('trade_id');
 
           if LTime > FLastTimestamp then
           begin
-            LAmount := LArr.Items[i].GetValue<string>('amount').ToDouble;
-            LIsBuyerMaker := LArr.Items[i].GetValue<Integer>('type') = 0;
+            LAmount := LArr.Items[i].GetValue<string>('size').ToDouble;
+            LIsBuyerMaker := LArr.Items[i].GetValue<String>('side') = 'buy';
 
-            if LIsBuyerMaker then
+            if not LIsBuyerMaker then
             begin
               LSumAsksTrades := LSumAsksTrades + LAmount;
               Inc(LCountAsksTrades);
@@ -163,7 +164,7 @@ begin
             Break;
         end;
 
-        FLastTimestamp := LArr.Items[0].GetValue<Int64>('date');
+        FLastTimestamp := LArr.Items[0].GetValue<Int64>('trade_id');
 
         FBidsTradeHistory.AddSec(LCountBidsTrades, LSumBidsTrades);
         FAsksTradeHistory.AddSec(LCountAsksTrades, LSumAsksTrades);
@@ -176,31 +177,40 @@ begin
   Self.TradeHistoryApplyUpdate := True;
 end;
 
-procedure TDepthBitstamp.Statistics24h;
+procedure TDepthCoinbasePro.Statistics24h;
 begin
   inherited;
 
   try
-    ParseResponse24h(FIdHTTP_Statistics24h.Get(c24hURL));
+    ParseResponse24h(FIdHTTP_Statistics24h.Get(Format(c24hURL, ['BTC-USD'])));
   except
     // ignore error
   end;
 end;
 
-procedure TDepthBitstamp.TradesHistory;
+procedure TDepthCoinbasePro.TradesHistory;
 var
   LRes: string;
 begin
   inherited;
 
+  if FWait = 0 then
   try
-    LRes := FIdHTTP_TradesHistory.Get(Format(cTradesHistoryURL, ['btcusd']));
+    LRes := FIdHTTP_TradesHistory.Get(Format(cTradesHistoryURL, ['BTC-USD']));
+                                       
+    // wait 2 sec for geting trades
+    FWait := 2;
   except
     on E: Exception do
     begin
       LRes := EmptyStr;
       Self.TradeHistoryApplyUpdate := True;
     end;
+  end
+  else
+  begin
+    Dec(FWait);
+    LRes := EmptyStr;
   end;
 
   ParseResponseTradesHistory(LRes);
@@ -211,21 +221,22 @@ begin
     FTradeHistoryProc;
 end;
 
-constructor TDepthBitstamp.Create;
+constructor TDepthCoinbasePro.Create;
 begin
   inherited;
 
-  FExchange := TExchange.Bitstamp;
+  FWait := 0;
+  FExchange := TExchange.CoinbasePro;
 end;
 
-procedure TDepthBitstamp.Depth;
+procedure TDepthCoinbasePro.Depth;
 var
   LRes: string;
 begin
   inherited;
 
   try
-    LRes := FIdHTTP_Depth.Get(depthURL);
+    LRes := FIdHTTP_Depth.Get(Format(depthURL, ['BTC-USD']));
   except
     on E: Exception do
     begin

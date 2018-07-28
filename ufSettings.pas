@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, Vcl.ExtCtrls, uSettigns,
-  VirtualTrees, uExchangeManager, uExchangeClass;
+  VirtualTrees, uExchangeManager, uExchangeClass, Vcl.Imaging.pngimage;
 
 type
   TfrmSettings = class(TForm)
@@ -30,12 +30,15 @@ type
     cbPercents: TComboBox;
     eMinRange: TEdit;
     eMaxRange: TEdit;
+    Label4: TLabel;
+    Image: TImage;
     procedure vstExchangesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstExchangesInitNode(Sender: TBaseVirtualTree; ParentNode,
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstExchangesChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure rbRangeClick(Sender: TObject);
+    procedure CERClick(Sender: TObject);
   private
     FExchangeManager: TExchangeManager;
     FOldUpdateStatistics24h: TOnUpdateStatistics24h;
@@ -53,7 +56,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils;
+  System.StrUtils, Winapi.ShellAPI;
 
 { TfrmSettings }
 
@@ -63,6 +66,11 @@ begin
     FOldUpdateStatistics24h;
 
   vstExchanges.Refresh;
+end;
+
+procedure TfrmSettings.CERClick(Sender: TObject);
+begin
+  ShellExecute(Handle, 'open', 'https://platform.cryptoexchangeranks.com/#/', nil, nil, SW_NORMAL);
 end;
 
 procedure TfrmSettings.LoadSettings;
@@ -104,7 +112,7 @@ begin
     LUseExchange := LNode^.CheckState = csCheckedNormal;
 
     case TExchange(LNode^.Index) of
-      BiBox: FExchangeManager.Settings.UseBiBox := LUseExchange;
+      CoinbasePro: FExchangeManager.Settings.UseCoinbasePro := LUseExchange;
       Binance: FExchangeManager.Settings.UseBinance := LUseExchange;
       Bitfinex: FExchangeManager.Settings.UseBitfinex := LUseExchange;
       Bitstamp: FExchangeManager.Settings.UseBitstamp := LUseExchange;
@@ -165,7 +173,7 @@ begin
 
     1:
       case TExchange(Node^.Index) of
-        BiBox: CellText := Format('%n', [FExchangeManager.BiBox.Statis24h.LastPrice]);
+        CoinbasePro: CellText := Format('%n', [FExchangeManager.CoinbasePro.Statis24h.LastPrice]);
         Binance: CellText := Format('%n', [FExchangeManager.Binance.Statis24h.LastPrice]);
         Bitfinex: CellText := Format('%n', [FExchangeManager.Bitfinex.Statis24h.LastPrice]);
         Bitstamp: CellText := Format('%n', [FExchangeManager.Bitstamp.Statis24h.LastPrice]);
@@ -174,12 +182,11 @@ begin
         Huobi: CellText := Format('%n', [FExchangeManager.Huobi.Statis24h.LastPrice]);
         Kraken: CellText := Format('%n', [FExchangeManager.Kraken.Statis24h.LastPrice]);
         Okex: CellText := Format('%n', [FExchangeManager.Okex.Statis24h.LastPrice]);
-        Poloniex: CellText := EmptyStr;
       end;
 
     2:
       case TExchange(Node^.Index) of
-        BiBox: CellText := Format('%n', [FExchangeManager.BiBox.Statis24h.Volume]);
+        CoinbasePro: CellText := Format('%n', [FExchangeManager.CoinbasePro.Statis24h.Volume]);
         Binance: CellText := Format('%n', [FExchangeManager.Binance.Statis24h.Volume]);
         Bitfinex: CellText := Format('%n', [FExchangeManager.Bitfinex.Statis24h.Volume]);
         Bitstamp: CellText := Format('%n', [FExchangeManager.Bitstamp.Statis24h.Volume]);
@@ -188,7 +195,6 @@ begin
         Huobi: CellText := Format('%n', [FExchangeManager.Huobi.Statis24h.Volume]);
         Kraken: CellText := Format('%n', [FExchangeManager.Kraken.Statis24h.Volume]);
         Okex: CellText := Format('%n', [FExchangeManager.Okex.Statis24h.Volume]);
-        Poloniex: CellText := EmptyStr;
       end;
   end;
 end;
@@ -200,13 +206,10 @@ var
 begin
   if Assigned(FExchangeManager) then
   begin
-    if TExchange(Node^.Index) = TExchange.Poloniex then
-      Include(InitialStates, ivsDisabled);
-
     Node^.CheckType := ctCheckBox;
 
     case TExchange(Node^.Index) of
-      BiBox: LUseExchange := FExchangeManager.Settings.UseBiBox;
+      CoinbasePro: LUseExchange := FExchangeManager.Settings.UseCoinbasePro;
       Binance: LUseExchange := FExchangeManager.Settings.UseBinance;
       Bitfinex: LUseExchange := FExchangeManager.Settings.UseBitfinex;
       Bitstamp: LUseExchange := FExchangeManager.Settings.UseBitstamp;
